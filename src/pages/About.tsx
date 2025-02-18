@@ -76,7 +76,7 @@ function About() {
         <div className="flex justify-center">
           <div className="text-center">
             <img
-              src="https://i.imgur.com/p6WFJ8z.png"
+              src="https://raw.githubusercontent.com/fredsterzzz/mn2-messynote/main/public/fredo.png"
               alt="Fred - Founder"
               className="w-32 h-32 rounded-full mx-auto mb-4 object-cover bg-background border-2 border-accent-purple"
             />

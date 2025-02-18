@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, ShoppingBag, FileEdit, PenTool, Presentation, BookOpen } from 'lucide-react';
+import { 
+  FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, 
+  ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, 
+  GraduationCap, Sparkles, FileSearch, PencilRuler, Users 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
@@ -208,51 +212,65 @@ function NewProject() {
 
         {mode === 'freeform' ? (
           <>
-            {/* Grid of Content Types */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => setSelectedType(template.id)}
-                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                    selectedType === template.id
-                      ? 'border-accent-purple bg-background text-accent-purple'
-                      : 'border-accent-purple/20 hover:border-accent-purple/40'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    {template.icon === '💼' && <Briefcase className="h-6 w-6" />}
-                    {template.icon === '📝' && <FileText className="h-6 w-6" />}
-                    {template.icon === '📈' && <PenTool className="h-6 w-6" />}
-                    {template.icon === '🎓' && <BookOpen className="h-6 w-6" />}
-                    {template.icon === '🎨' && <Wand2 className="h-6 w-6" />}
-                    {template.icon === '⚙️' && <FileEdit className="h-6 w-6" />}
-                    {template.icon === '👥' && <FileText className="h-6 w-6" />}
-                    {template.icon === '🎯' && <Presentation className="h-6 w-6" />}
-                    <span className="mt-2">{template.name}</span>
-                  </div>
-                </button>
-              ))}
+            {/* Template Selection */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center">
+                <Wand2 className="h-5 w-5 mr-2 text-accent-purple" />
+                Select Template
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {templates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => setSelectedType(template.id)}
+                    className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                      selectedType === template.id
+                        ? 'border-accent-purple bg-background text-accent-purple'
+                        : 'border-accent-purple/20 hover:border-accent-purple/40'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      {template.id === 'business' && <Briefcase className="h-6 w-6" />}
+                      {template.id === 'personal' && <FileText className="h-6 w-6" />}
+                      {template.id === 'sales' && <PenTool className="h-6 w-6" />}
+                      {template.id === 'academic' && <GraduationCap className="h-6 w-6" />}
+                      {template.id === 'creative' && <Sparkles className="h-6 w-6" />}
+                      {template.id === 'technical' && <FileEdit className="h-6 w-6" />}
+                      {template.id === 'meeting' && <Users className="h-6 w-6" />}
+                      {template.id === 'presentation' && <Presentation className="h-6 w-6" />}
+                      {template.id === 'blog' && <PencilRuler className="h-6 w-6" />}
+                      {template.id === 'research' && <FileSearch className="h-6 w-6" />}
+                      <span className="mt-2">{template.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Tone Selection */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {tones.map((tone) => (
-                <button
-                  key={tone.id}
-                  onClick={() => setSelectedTone(tone.id)}
-                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                    selectedTone === tone.id
-                      ? 'border-accent-purple bg-background text-accent-purple'
-                      : 'border-accent-purple/20 hover:border-accent-purple/40'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xl mb-2">{tone.icon}</span>
-                    <span>{tone.name}</span>
-                  </div>
-                </button>
-              ))}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-accent-purple" />
+                Select Tone
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {tones.map((tone) => (
+                  <button
+                    key={tone.id}
+                    onClick={() => setSelectedTone(tone.id)}
+                    className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                      selectedTone === tone.id
+                        ? 'border-accent-purple bg-background text-accent-purple'
+                        : 'border-accent-purple/20 hover:border-accent-purple/40'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl mb-2">{tone.icon}</span>
+                      <span>{tone.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Notes Input */}

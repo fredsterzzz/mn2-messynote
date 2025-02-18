@@ -194,7 +194,7 @@ app.get('/auth/google/callback', async (req, res) => {
   try {
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
-      token: code as string,
+      token: String(code),
       nonce: req.cookies['supabase-auth-nonce']
     });
 

@@ -2,6 +2,7 @@
   "name": "messynotes-ai",
   "private": true,
   "version": "1.0.0",
+  "description": "AI-powered note-taking application",
   "type": "module",
   "scripts": {
     "dev": "vite",

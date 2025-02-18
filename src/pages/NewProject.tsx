@@ -5,7 +5,7 @@ import {
   ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, 
   GraduationCap, Sparkles, FileSearch, PencilRuler, Users,
   Calendar, GraduationCap as Resume, LightbulbIcon, Building2,
-  MessageSquare, Star, Eye, Plus, Camera, Upload
+  Camera, Upload
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
@@ -146,7 +146,7 @@ function NewProject() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { credits, checkCredits } = useCredits();
-  const [mode, setMode] = useState<'freeform' | 'task' | 'assistant' | 'ocr'>('freeform');
+  const [mode, setMode] = useState<'freeform' | 'task' | 'ocr'>('freeform');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState('');
@@ -305,23 +305,6 @@ function NewProject() {
           >
             <FileEdit className="h-6 w-6 mr-2" />
             <span>Task Helper</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setMode('assistant');
-              setNotes('');
-              setGeneratedContent('');
-              setOcrResult('');
-            }}
-            className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
-              mode === 'assistant'
-                ? 'border-accent-purple bg-background text-accent-purple'
-                : 'border-accent-purple/20 hover:border-accent-purple/40'
-            }`}
-          >
-            <MessageSquare className="h-6 w-6 mr-2" />
-            <span>AI Assistant</span>
           </button>
 
           <button
@@ -496,61 +479,6 @@ function NewProject() {
                   ))}
               </div>
             )}
-          </div>
-        ) : mode === 'assistant' ? (
-          <div className="space-y-6">
-            <div className="flex flex-col space-y-4">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2 text-accent-purple" />
-                AI Assistant
-              </h2>
-              <p className="text-text-secondary">
-                Chat with our AI assistant to get help with your writing. Ask questions, get suggestions, or request feedback.
-              </p>
-              <div className="flex flex-col space-y-4 bg-background rounded-lg p-4 border border-accent-purple/20">
-                {/* Chat messages would go here */}
-                <div className="min-h-[200px] max-h-[400px] overflow-y-auto">
-                  {/* Example message */}
-                  <div className="flex items-start space-x-3 mb-4">
-                    <div className="flex-shrink-0">
-                      <Wand2 className="h-6 w-6 text-accent-purple" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-text-primary">
-                        Hi! I'm your AI writing assistant. How can I help you today?
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Input area */}
-                <div className="flex space-x-3">
-                  <textarea
-                    placeholder="Type your message..."
-                    rows={3}
-                    className="flex-1 rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
-                  />
-                  <button
-                    className="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/90"
-                  >
-                    Send
-                  </button>
-                </div>
-
-                {/* Quick actions */}
-                <div className="flex flex-wrap gap-2">
-                  <button className="px-3 py-1 rounded-full bg-background border border-accent-purple/20 text-sm hover:border-accent-purple/40">
-                    ✨ Improve writing
-                  </button>
-                  <button className="px-3 py-1 rounded-full bg-background border border-accent-purple/20 text-sm hover:border-accent-purple/40">
-                    💡 Brainstorm ideas
-                  </button>
-                  <button className="px-3 py-1 rounded-full bg-background border border-accent-purple/20 text-sm hover:border-accent-purple/40">
-                    📝 Get feedback
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         ) : (
           <div className="space-y-6">

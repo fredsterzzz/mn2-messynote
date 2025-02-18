@@ -1,12 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Sparkles } from 'lucide-react';
-import { createCheckoutSession } from '../services/stripe';
 import { useAuth } from '../context/AuthContext';
 
 function Pricing() {
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -14,15 +12,7 @@ function Pricing() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      await createCheckoutSession(user.id);
-    } catch (error) {
-      console.error('Subscription error:', error);
-      alert('Failed to start subscription process. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    window.location.href = 'https://buy.stripe.com/3cs9CB0A7b0C1SE144';
   };
 
   const features = [
@@ -72,10 +62,9 @@ function Pricing() {
 
           <button
             onClick={handleSubscribe}
-            disabled={isLoading}
-            className="w-full py-4 px-8 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 px-8 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
           >
-            {isLoading ? 'Processing...' : 'Start Free Trial'}
+            Start Free Trial
           </button>
           <p className="text-center text-sm text-text-secondary mt-4">
             14-day free trial, cancel anytime

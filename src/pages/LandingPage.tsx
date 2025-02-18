@@ -1,8 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles, Wand2, Brain, Zap } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 function LandingPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubscribe = () => {
+    if (!user) {
+      navigate('/auth?redirect=pricing');
+      return;
+    }
+    window.location.href = 'https://buy.stripe.com/3cs9CB0A7b0C1SE144';
+  };
+
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Hero Section */}
@@ -110,12 +122,12 @@ function LandingPage() {
                 ))}
               </ul>
 
-              <Link
-                to="/auth"
+              <button
+                onClick={handleSubscribe}
                 className="block w-full py-4 px-8 bg-gradient-cta text-center rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
               >
                 Start Free Trial
-              </Link>
+              </button>
               <p className="text-center text-sm text-text-secondary mt-4">
                 14-day free trial, cancel anytime
               </p>

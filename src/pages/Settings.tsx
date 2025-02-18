@@ -1,8 +1,9 @@
-import React from 'react';
-import { User, Bell, Shield, CreditCard, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Bell, Shield, CreditCard, Loader2, AlertCircle, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { createPortalSession } from '../services/stripe';
+import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
 
 function Settings() {
@@ -10,13 +11,29 @@ function Settings() {
   const { credits, loading, resetCredits } = useCredits();
   const [isLoadingPortal, setIsLoadingPortal] = React.useState(false);
   const [isResetting, setIsResetting] = React.useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+
+  // Check if user can change password (only email+password users can)
+  const canChangePassword = user?.app_metadata?.provider === 'email';
 
   const handleBillingPortal = async () => {
     if (!user) return;
     
     setIsLoadingPortal(true);
     try {
-      await createPortalSession(user.id);
+      const { url } = await createPortalSession(user.id);
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No portal URL received');
+      }
     } catch (error) {
       console.error('Portal error:', error);
       alert('Failed to open billing portal. Please try again.');
@@ -34,6 +51,51 @@ function Settings() {
       alert('Failed to reset credits. Please try again.');
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (passwords.new !== passwords.confirm) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (passwords.new.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+
+      // First verify the current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: passwords.current
+      });
+
+      if (signInError) {
+        setPasswordError('Current password is incorrect');
+        return;
+      }
+
+      // Update the password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwords.new
+      });
+
+      if (updateError) throw updateError;
+
+      setPasswordSuccess('Password updated successfully');
+      setPasswords({ current: '', new: '', confirm: '' });
+    } catch (error) {
+      console.error('Password change error:', error);
+      setPasswordError('Failed to update password. Please try again.');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -92,9 +154,93 @@ function Settings() {
           <h2 className="text-xl font-semibold text-text-primary">Security</h2>
         </div>
         <div className="space-y-4">
-          <button className="text-accent-purple hover:text-accent-purple/80 transition-colors font-medium">
-            Change Password
-          </button>
+          {!canChangePassword ? (
+            <div className="text-text-secondary">
+              Password management is handled by your sign-in provider ({user?.app_metadata?.provider}).
+            </div>
+          ) : !isChangingPassword ? (
+            <button 
+              onClick={() => setIsChangingPassword(true)}
+              className="text-accent-purple hover:text-accent-purple/80 transition-colors font-medium"
+            >
+              Change Password
+            </button>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={passwords.current}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, current: e.target.value }))}
+                  className="w-full rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwords.new}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
+                  className="w-full rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwords.confirm}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
+                  className="w-full rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
+                />
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setIsChangingPassword(false);
+                    setPasswords({ current: '', new: '', confirm: '' });
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                  }}
+                  className="px-4 py-2 bg-background text-text-primary border border-accent-purple/20 rounded-lg font-semibold hover:bg-background-secondary transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={isChangingPassword}
+                  className="px-4 py-2 bg-accent-purple text-white rounded-lg font-semibold hover:bg-accent-purple/90 transition-all disabled:opacity-50"
+                >
+                  {isChangingPassword ? (
+                    <span className="flex items-center">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Updating...
+                    </span>
+                  ) : (
+                    'Update Password'
+                  )}
+                </button>
+              </div>
+              {passwordError && (
+                <div className="flex items-center space-x-2 text-red-400">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+              {passwordSuccess && (
+                <div className="flex items-center space-x-2 text-green-400">
+                  <Shield className="h-4 w-4" />
+                  <span>{passwordSuccess}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

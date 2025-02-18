@@ -169,23 +169,6 @@ function NewProject() {
       return;
     }
 
-    if (mode === 'task') {
-      const template = taskTemplates.find(t => t.id === selectedTemplate);
-      if (!template) return;
-
-      const missingFields = template.fields.filter(
-        field => !formData[field.name] || formData[field.name].trim() === ''
-      );
-
-      if (missingFields.length > 0) {
-        setError(`Please fill in all fields: ${missingFields.map(f => f.label).join(', ')}`);
-        return;
-      }
-    } else if (!notes.trim()) {
-      setError('Please enter your notes');
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
@@ -197,23 +180,45 @@ function NewProject() {
       }
 
       let contentToTransform = '';
+      
       if (mode === 'task') {
         const template = taskTemplates.find(t => t.id === selectedTemplate);
-        contentToTransform = template?.fields.map(
-          field => `${field.label}: ${formData[field.name]}`
-        ).join('\n') || '';
+        if (!template) {
+          setError('Template not found');
+          return;
+        }
+
+        // Check if all required fields are filled
+        const missingFields = template.fields.filter(
+          field => !formData[field.name] || formData[field.name].trim() === ''
+        );
+
+        if (missingFields.length > 0) {
+          setError(`Please fill in all fields: ${missingFields.map(f => f.label).join(', ')}`);
+          return;
+        }
+
+        // Format the content for the task template
+        contentToTransform = template.fields
+          .map(field => `${field.label}: ${formData[field.name]}`)
+          .join('\n');
       } else {
+        if (!notes.trim()) {
+          setError('Please enter your notes');
+          return;
+        }
         contentToTransform = notes;
       }
 
       const result = await transformNotes(
         contentToTransform,
-        selectedType,
-        selectedTone
+        mode === 'task' ? 'business' : selectedType,
+        mode === 'task' ? 'professional' : selectedTone
       );
 
       setGeneratedContent(result);
     } catch (err) {
+      console.error('Generation error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);

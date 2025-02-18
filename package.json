@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "vercel-build": "npm run build && npm run server"
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@stripe/stripe-js": "^3.0.5",

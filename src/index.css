@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background-color: #0A0A0B;
+  color: #FFFFFF;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #0A0A0B;
+  color: #FFFFFF;
+}
+
+/* Gradient animation */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-cta {
+  background-size: 200% 200%;
+  animation: gradient 5s ease infinite;
+}
+
+/* Improve text readability */
+.text-text-secondary {
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}

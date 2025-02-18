@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     optimizeDeps: {
       exclude: ['lucide-react'],
+      include: ['tesseract.js'],
     },
     define: {
       'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
@@ -21,6 +22,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
+            ocr: ['tesseract.js'],
           },
         },
       },

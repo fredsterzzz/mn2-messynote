@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, 
   ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, 
-  GraduationCap, Sparkles, FileSearch, PencilRuler, Users 
+  GraduationCap, Sparkles, FileSearch, PencilRuler, Users,
+  Calendar, GraduationCap as Resume, LightbulbIcon, Building2,
+  MessageSquare, Star, Eye, Plus, Camera, Upload
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
 import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
+import { createWorker } from 'tesseract.js';
 
 const taskTemplates = [
   {
@@ -76,6 +79,66 @@ const taskTemplates = [
       { name: 'location', label: 'Location', placeholder: 'e.g., Los Angeles, CA' },
       { name: 'contact', label: 'Contact Info', placeholder: 'e.g., Email or phone number' }
     ]
+  },
+  {
+    id: 'event-planning',
+    name: 'Plan Event',
+    icon: <Calendar className="h-6 w-6" />,
+    fields: [
+      { name: 'name', label: 'Event Name', placeholder: 'e.g., Annual Tech Conference' },
+      { name: 'date', label: 'Date', placeholder: 'e.g., October 15-16, 2024' },
+      { name: 'location', label: 'Location', placeholder: 'e.g., Convention Center, City' },
+      { name: 'attendees', label: 'Expected Attendees', placeholder: 'e.g., 500' },
+      { name: 'description', label: 'Event Description', placeholder: 'Brief description of the event...' },
+      { name: 'schedule', label: 'Schedule', placeholder: 'Key timeline and activities' },
+      { name: 'budget', label: 'Budget', placeholder: 'e.g., $50,000' },
+      { name: 'requirements', label: 'Special Requirements', placeholder: 'e.g., AV equipment, catering' }
+    ]
+  },
+  {
+    id: 'resume',
+    name: 'Build Resume',
+    icon: <Resume className="h-6 w-6" />,
+    fields: [
+      { name: 'name', label: 'Full Name', placeholder: 'e.g., John Smith' },
+      { name: 'title', label: 'Professional Title', placeholder: 'e.g., Senior Software Engineer' },
+      { name: 'summary', label: 'Professional Summary', placeholder: 'Brief overview of your experience...' },
+      { name: 'experience', label: 'Work Experience', placeholder: 'List your relevant work experience...' },
+      { name: 'education', label: 'Education', placeholder: 'Your educational background...' },
+      { name: 'skills', label: 'Skills', placeholder: 'Key technical and soft skills...' },
+      { name: 'achievements', label: 'Achievements', placeholder: 'Notable accomplishments...' },
+      { name: 'contact', label: 'Contact Information', placeholder: 'Email, phone, LinkedIn...' }
+    ]
+  },
+  {
+    id: 'project-proposal',
+    name: 'Project Proposal',
+    icon: <LightbulbIcon className="h-6 w-6" />,
+    fields: [
+      { name: 'title', label: 'Project Title', placeholder: 'e.g., Mobile App Development' },
+      { name: 'summary', label: 'Executive Summary', placeholder: 'Brief overview of the project...' },
+      { name: 'objectives', label: 'Objectives', placeholder: 'Key goals and outcomes...' },
+      { name: 'scope', label: 'Project Scope', placeholder: 'What\'s included and excluded...' },
+      { name: 'timeline', label: 'Timeline', placeholder: 'Major milestones and deadlines...' },
+      { name: 'budget', label: 'Budget', placeholder: 'Cost breakdown and resources...' },
+      { name: 'risks', label: 'Risks & Mitigation', placeholder: 'Potential risks and solutions...' },
+      { name: 'team', label: 'Team & Resources', placeholder: 'Required team members and resources...' }
+    ]
+  },
+  {
+    id: 'business-plan',
+    name: 'Business Plan',
+    icon: <Building2 className="h-6 w-6" />,
+    fields: [
+      { name: 'name', label: 'Business Name', placeholder: 'e.g., Tech Solutions Inc.' },
+      { name: 'summary', label: 'Executive Summary', placeholder: 'Brief overview of the business...' },
+      { name: 'market', label: 'Market Analysis', placeholder: 'Target market and competition...' },
+      { name: 'product', label: 'Product/Service', placeholder: 'Description of offerings...' },
+      { name: 'strategy', label: 'Marketing Strategy', placeholder: 'How you\'ll reach customers...' },
+      { name: 'operations', label: 'Operations Plan', placeholder: 'Day-to-day operations...' },
+      { name: 'financials', label: 'Financial Projections', placeholder: 'Revenue, costs, funding needs...' },
+      { name: 'team', label: 'Management Team', placeholder: 'Key team members and roles...' }
+    ]
   }
 ];
 
@@ -83,7 +146,7 @@ function NewProject() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { credits, checkCredits } = useCredits();
-  const [mode, setMode] = useState<'freeform' | 'task'>('freeform');
+  const [mode, setMode] = useState<'freeform' | 'task' | 'assistant' | 'ocr'>('freeform');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState('');
@@ -92,6 +155,9 @@ function NewProject() {
   const [generatedContent, setGeneratedContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrResult, setOcrResult] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -154,6 +220,35 @@ function NewProject() {
     }
   };
 
+  const handleOCR = async (file: File) => {
+    setIsLoading(true);
+    setError('');
+    setOcrProgress(0);
+
+    try {
+      const worker = await createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setOcrProgress(m.progress);
+          }
+        },
+      });
+
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      
+      const { data: { text } } = await worker.recognize(file);
+      setOcrResult(text);
+      setNotes(text);
+      await worker.terminate();
+    } catch (err) {
+      setError('Error processing image. Please try again.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <BackButton />
@@ -183,6 +278,7 @@ function NewProject() {
               setSelectedTemplate('');
               setFormData({});
               setGeneratedContent('');
+              setOcrResult('');
             }}
             className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
               mode === 'freeform'
@@ -193,11 +289,13 @@ function NewProject() {
             <PenTool className="h-6 w-6 mr-2" />
             <span>Freeform Notes</span>
           </button>
+          
           <button
             onClick={() => {
               setMode('task');
               setNotes('');
               setGeneratedContent('');
+              setOcrResult('');
             }}
             className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
               mode === 'task'
@@ -207,6 +305,40 @@ function NewProject() {
           >
             <FileEdit className="h-6 w-6 mr-2" />
             <span>Task Helper</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setMode('assistant');
+              setNotes('');
+              setGeneratedContent('');
+              setOcrResult('');
+            }}
+            className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
+              mode === 'assistant'
+                ? 'border-accent-purple bg-background text-accent-purple'
+                : 'border-accent-purple/20 hover:border-accent-purple/40'
+            }`}
+          >
+            <MessageSquare className="h-6 w-6 mr-2" />
+            <span>AI Assistant</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setMode('ocr');
+              setNotes('');
+              setGeneratedContent('');
+              setOcrResult('');
+            }}
+            className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
+              mode === 'ocr'
+                ? 'border-accent-purple bg-background text-accent-purple'
+                : 'border-accent-purple/20 hover:border-accent-purple/40'
+            }`}
+          >
+            <Camera className="h-6 w-6 mr-2" />
+            <span>Extract Text</span>
           </button>
         </div>
 
@@ -287,30 +419,61 @@ function NewProject() {
               />
             </div>
           </>
-        ) : (
+        ) : mode === 'task' ? (
           <div>
-            {/* Template Selection */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {taskTemplates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => {
-                    setSelectedTemplate(template.id);
-                    setFormData({});
-                    setGeneratedContent('');
-                  }}
-                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                    selectedTemplate === template.id
-                      ? 'border-accent-purple bg-background text-accent-purple'
-                      : 'border-accent-purple/20 hover:border-accent-purple/40'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    {template.icon}
-                    <span className="mt-2">{template.name}</span>
-                  </div>
-                </button>
-              ))}
+            {/* Template Categories */}
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <Wand2 className="h-5 w-5 mr-2 text-accent-purple" />
+                  Select Template
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {/* Toggle favorites */}}
+                    className="p-2 rounded-lg border border-accent-purple/20 hover:border-accent-purple/40"
+                    title="Show Favorites"
+                  >
+                    <Star className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => {/* Show preview */}}
+                    className="p-2 rounded-lg border border-accent-purple/20 hover:border-accent-purple/40"
+                    title="Preview Template"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => {/* Create custom template */}}
+                    className="p-2 rounded-lg border border-accent-purple/20 hover:border-accent-purple/40"
+                    title="Create Custom Template"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {taskTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => {
+                      setSelectedTemplate(template.id);
+                      setFormData({});
+                      setGeneratedContent('');
+                    }}
+                    className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                      selectedTemplate === template.id
+                        ? 'border-accent-purple bg-background text-accent-purple'
+                        : 'border-accent-purple/20 hover:border-accent-purple/40'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      {template.icon}
+                      <span className="mt-2">{template.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {selectedTemplate && (
@@ -333,6 +496,133 @@ function NewProject() {
                   ))}
               </div>
             )}
+          </div>
+        ) : mode === 'assistant' ? (
+          <div className="space-y-6">
+            <div className="flex flex-col space-y-4">
+              <h2 className="text-lg font-semibold text-text-primary flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2 text-accent-purple" />
+                AI Assistant
+              </h2>
+              <p className="text-text-secondary">
+                Chat with our AI assistant to get help with your writing. Ask questions, get suggestions, or request feedback.
+              </p>
+              <div className="flex flex-col space-y-4 bg-background rounded-lg p-4 border border-accent-purple/20">
+                {/* Chat messages would go here */}
+                <div className="min-h-[200px] max-h-[400px] overflow-y-auto">
+                  {/* Example message */}
+                  <div className="flex items-start space-x-3 mb-4">
+                    <div className="flex-shrink-0">
+                      <Wand2 className="h-6 w-6 text-accent-purple" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-text-primary">
+                        Hi! I'm your AI writing assistant. How can I help you today?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Input area */}
+                <div className="flex space-x-3">
+                  <textarea
+                    placeholder="Type your message..."
+                    rows={3}
+                    className="flex-1 rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
+                  />
+                  <button
+                    className="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/90"
+                  >
+                    Send
+                  </button>
+                </div>
+
+                {/* Quick actions */}
+                <div className="flex flex-wrap gap-2">
+                  <button className="px-3 py-1 rounded-full bg-background border border-accent-purple/20 text-sm hover:border-accent-purple/40">
+                    ✨ Improve writing
+                  </button>
+                  <button className="px-3 py-1 rounded-full bg-background border border-accent-purple/20 text-sm hover:border-accent-purple/40">
+                    💡 Brainstorm ideas
+                  </button>
+                  <button className="px-3 py-1 rounded-full bg-background border border-accent-purple/20 text-sm hover:border-accent-purple/40">
+                    📝 Get feedback
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex flex-col space-y-4">
+              <h2 className="text-lg font-semibold text-text-primary flex items-center">
+                <Camera className="h-5 w-5 mr-2 text-accent-purple" />
+                Extract Text from Images
+              </h2>
+              <p className="text-text-secondary">
+                Upload an image containing text, and we'll extract it for you. Works best with clear, well-lit images.
+              </p>
+
+              <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-accent-purple/20 rounded-lg bg-background hover:border-accent-purple/40 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleOCR(file);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center space-y-2"
+                  disabled={isLoading}
+                >
+                  <Upload className="h-8 w-8 text-accent-purple" />
+                  <span className="text-text-primary">Click to upload an image</span>
+                  <span className="text-sm text-text-secondary">or drag and drop</span>
+                </button>
+              </div>
+
+              {isLoading && (
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-full h-2 bg-background rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-accent-purple transition-all duration-300"
+                      style={{ width: `${ocrProgress * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-sm text-text-secondary">
+                    Processing image... {Math.round(ocrProgress * 100)}%
+                  </span>
+                </div>
+              )}
+
+              {ocrResult && (
+                <div className="space-y-4">
+                  <h3 className="text-md font-semibold text-text-primary">Extracted Text</h3>
+                  <div className="p-4 bg-background rounded-lg border border-accent-purple/20">
+                    <pre className="whitespace-pre-wrap text-text-primary font-mono text-sm">
+                      {ocrResult}
+                    </pre>
+                  </div>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={() => {
+                        setMode('freeform');
+                        setNotes(ocrResult);
+                      }}
+                      className="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/90"
+                    >
+                      Continue to Editor
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

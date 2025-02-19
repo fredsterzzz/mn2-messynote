@@ -32,6 +32,7 @@ function Navbar() {
             <div className="hidden md:flex ml-10 space-x-8">
               <Link to="/about" className="text-text-secondary hover:text-accent-purple transition-colors">About</Link>
               <Link to="/pricing" className="text-text-secondary hover:text-accent-purple transition-colors">Pricing</Link>
+              <Link to="/blog" className="text-text-secondary hover:text-accent-purple transition-colors">Blog</Link>
               <Link to="/privacy" className="text-text-secondary hover:text-accent-purple transition-colors">Privacy</Link>
               <Link to="/contact" className="text-text-secondary hover:text-accent-purple transition-colors">Contact</Link>
             </div>

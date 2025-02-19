@@ -5,7 +5,7 @@ import {
   ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, 
   GraduationCap, Sparkles, FileSearch, PencilRuler, Users,
   Calendar, GraduationCap as Resume, LightbulbIcon, Building2,
-  Camera, Upload
+  Camera, Upload, Star, Eye, Plus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
@@ -158,9 +158,65 @@ function NewProject() {
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrResult, setOcrResult] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      await handleOCR(file);
+    }
+  };
+
+  const handleOCR = async (file: File) => {
+    setIsLoading(true);
+    setError('');
+    setOcrProgress(0);
+    setOcrResult('');
+
+    try {
+      const worker = await createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setOcrProgress(m.progress);
+          }
+        },
+      });
+
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      
+      const { data: { text } } = await worker.recognize(file);
+      
+      if (!text || text.trim() === '') {
+        throw new Error('No text was found in the image');
+      }
+      
+      setOcrResult(text);
+      setNotes(text);
+      await worker.terminate();
+    } catch (err) {
+      console.error('OCR Error:', err);
+      setError(err instanceof Error ? err.message : 'Error processing image. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const generateContent = async () => {
@@ -220,35 +276,6 @@ function NewProject() {
     } catch (err) {
       console.error('Generation error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleOCR = async (file: File) => {
-    setIsLoading(true);
-    setError('');
-    setOcrProgress(0);
-
-    try {
-      const worker = await createWorker({
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(m.progress);
-          }
-        },
-      });
-
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      
-      const { data: { text } } = await worker.recognize(file);
-      setOcrResult(text);
-      setNotes(text);
-      await worker.terminate();
-    } catch (err) {
-      setError('Error processing image. Please try again.');
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -496,7 +523,16 @@ function NewProject() {
                 Upload an image containing text, and we'll extract it for you. Works best with clear, well-lit images.
               </p>
 
-              <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-accent-purple/20 rounded-lg bg-background hover:border-accent-purple/40 transition-colors">
+              <div 
+                className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors ${
+                  isDragging 
+                    ? 'border-accent-purple bg-accent-purple/5' 
+                    : 'border-accent-purple/20 bg-background hover:border-accent-purple/40'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <input
                   type="file"
                   accept="image/*"
@@ -525,7 +561,7 @@ function NewProject() {
                   <div className="w-full h-2 bg-background rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-accent-purple transition-all duration-300"
-                      style={{ width: `${ocrProgress * 100}%` }}
+                      style={{ width: `${Math.max(ocrProgress * 100, 10)}%` }}
                     />
                   </div>
                   <span className="text-sm text-text-secondary">

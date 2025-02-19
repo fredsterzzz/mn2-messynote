@@ -190,19 +190,18 @@ function NewProject() {
     setOcrProgress(0);
     setOcrResult('');
 
-    let worker;
-    try {
-      worker = await createWorker();
-      
-      // Set up progress monitoring
-      worker.logger = (data: any) => {
-        if (data.status === 'recognizing text') {
-          setOcrProgress(data.progress || 0);
-        }
-      };
+    const worker = await createWorker();
 
+    try {
+      await worker.load();
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
+
+      worker.setProgressHandler((progress) => {
+        if (progress.status === 'recognizing text') {
+          setOcrProgress(progress.progress || 0);
+        }
+      });
       
       const { data: { text } } = await worker.recognize(file);
       
@@ -216,9 +215,7 @@ function NewProject() {
       console.error('OCR Error:', err);
       setError(err instanceof Error ? err.message : 'Error processing image. Please try again.');
     } finally {
-      if (worker) {
-        await worker.terminate();
-      }
+      await worker.terminate();
       setIsLoading(false);
     }
   };

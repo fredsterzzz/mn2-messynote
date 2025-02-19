@@ -137,6 +137,33 @@ const toneModifiers = {
   }
 };
 
+// Verify model access and get available models
+async function getAvailableModel() {
+  try {
+    // Try GPT-3.5-turbo first
+    await openai.chat.completions.create({
+      messages: [{ role: "user", content: "test" }],
+      model: "gpt-3.5-turbo-1106",
+      max_tokens: 5
+    });
+    return "gpt-3.5-turbo-1106";
+  } catch (error) {
+    console.log("GPT-3.5-turbo not available, falling back to GPT-4");
+    try {
+      // Try GPT-4 as fallback
+      await openai.chat.completions.create({
+        messages: [{ role: "user", content: "test" }],
+        model: "gpt-4",
+        max_tokens: 5
+      });
+      return "gpt-4";
+    } catch (error) {
+      console.error("Neither GPT-3.5-turbo nor GPT-4 are available");
+      throw new Error("No available AI models. Please check your OpenAI API key permissions.");
+    }
+  }
+}
+
 export async function transformNotes(notes: string, template: string, tone: string) {
   if (!apiKey) {
     throw new Error('OpenAI API key is not configured. Please add your API key to the .env file.');
@@ -161,6 +188,10 @@ export async function transformNotes(notes: string, template: string, tone: stri
       throw new Error('Invalid template or tone selected');
     }
 
+    // Get available model
+    const model = await getAvailableModel();
+    console.log(`Using AI model: ${model}`);
+
     const prompt = `Transform the following notes using these guidelines:
 - ${selectedTemplate.prompt}
 - ${selectedTone.description}
@@ -183,7 +214,7 @@ ${notes}`;
           content: prompt
         }
       ],
-      model: "gpt-3.5-turbo-1106",
+      model,
       temperature: 0.5,
       max_tokens: 1500,
       presence_penalty: 0,

@@ -1,21 +1,5 @@
 {
-  "version": 2,
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "server/index.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  }
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

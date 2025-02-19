@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { Switch } from '../components/ui/switch';
+import { Bell, Shield, CreditCard } from 'lucide-react';
 import { createPortalSession } from '../services/stripe';
 
 export default function Settings() {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('notifications');
 
   useEffect(() => {
     if (!user) {
@@ -35,89 +32,108 @@ export default function Settings() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Settings</h1>
       
-      <Tabs defaultValue="notifications" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-          {isAdmin && <TabsTrigger value="blog">Blog Management</TabsTrigger>}
-        </TabsList>
+      <div className="flex space-x-4 mb-6">
+        <button
+          onClick={() => setActiveTab('notifications')}
+          className={`px-4 py-2 rounded-lg ${activeTab === 'notifications' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+        >
+          Notifications
+        </button>
+        <button
+          onClick={() => setActiveTab('security')}
+          className={`px-4 py-2 rounded-lg ${activeTab === 'security' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+        >
+          Security
+        </button>
+        <button
+          onClick={() => setActiveTab('billing')}
+          className={`px-4 py-2 rounded-lg ${activeTab === 'billing' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+        >
+          Billing
+        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('blog')}
+            className={`px-4 py-2 rounded-lg ${activeTab === 'blog' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+          >
+            Blog Management
+          </button>
+        )}
+      </div>
 
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Configure how you want to be notified.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        {activeTab === 'notifications' && (
+          <div>
+            <div className="flex items-center mb-4">
+              <Bell className="h-5 w-5 mr-2 text-orange-500" />
+              <h2 className="text-xl font-semibold">Notification Preferences</h2>
+            </div>
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="email-notifications">Email Notifications</Label>
-                <Switch id="email-notifications" />
+                <label className="font-medium">Email Notifications</label>
+                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="marketing-emails">Marketing Emails</Label>
-                <Switch id="marketing-emails" />
+                <label className="font-medium">Marketing Emails</label>
+                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        )}
 
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-              <CardDescription>Manage your account security preferences.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {activeTab === 'security' && (
+          <div>
+            <div className="flex items-center mb-4">
+              <Shield className="h-5 w-5 mr-2 text-orange-500" />
+              <h2 className="text-xl font-semibold">Security Settings</h2>
+            </div>
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="two-factor">Two-Factor Authentication</Label>
-                <Switch id="two-factor" />
+                <label className="font-medium">Two-Factor Authentication</label>
+                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="session-timeout">Auto Logout</Label>
-                <Switch id="session-timeout" />
+                <label className="font-medium">Auto Logout</label>
+                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
+        )}
 
-        <TabsContent value="billing">
-          <Card>
-            <CardHeader>
-              <CardTitle>Billing Settings</CardTitle>
-              <CardDescription>Manage your subscription and billing details.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
+        {activeTab === 'billing' && (
+          <div>
+            <div className="flex items-center mb-4">
+              <CreditCard className="h-5 w-5 mr-2 text-orange-500" />
+              <h2 className="text-xl font-semibold">Billing Settings</h2>
+            </div>
+            <div className="space-y-4">
+              <button
                 onClick={handleBillingPortal}
                 disabled={isLoading}
-                className="w-full"
+                className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {isLoading ? 'Loading...' : 'Manage Subscription'}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {isAdmin && (
-          <TabsContent value="blog">
-            <Card>
-              <CardHeader>
-                <CardTitle>Blog Management</CardTitle>
-                <CardDescription>Create and manage blog posts.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button 
-                  onClick={() => navigate('/admin/blog/new')}
-                  className="w-full"
-                >
-                  Create New Blog Post
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </button>
+            </div>
+          </div>
         )}
-      </Tabs>
+
+        {activeTab === 'blog' && isAdmin && (
+          <div>
+            <div className="flex items-center mb-4">
+              <h2 className="text-xl font-semibold">Blog Management</h2>
+            </div>
+            <div className="space-y-4">
+              <button
+                onClick={() => navigate('/admin/blog/new')}
+                className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Create New Blog Post
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

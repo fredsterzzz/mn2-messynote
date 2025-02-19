@@ -12,6 +12,25 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true
 });
 
+// Cache for storing recent transformations
+const transformationCache = new Map<string, { content: string; timestamp: number }>();
+const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+
+// Function to generate cache key
+function generateCacheKey(notes: string, template: string, tone: string): string {
+  return `${notes}-${template}-${tone}`;
+}
+
+// Function to clean old cache entries
+function cleanCache() {
+  const now = Date.now();
+  for (const [key, value] of transformationCache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      transformationCache.delete(key);
+    }
+  }
+}
+
 const templatePrompts = {
   business: {
     icon: '💼',
@@ -124,6 +143,17 @@ export async function transformNotes(notes: string, template: string, tone: stri
   }
 
   try {
+    // Clean old cache entries
+    cleanCache();
+
+    // Check cache first
+    const cacheKey = generateCacheKey(notes, template, tone);
+    const cachedResult = transformationCache.get(cacheKey);
+    if (cachedResult) {
+      console.log('Using cached transformation');
+      return cachedResult.content;
+    }
+
     const selectedTemplate = templatePrompts[template as keyof typeof templatePrompts];
     const selectedTone = toneModifiers[tone as keyof typeof toneModifiers];
 
@@ -153,17 +183,24 @@ ${notes}`;
           content: prompt
         }
       ],
-      model: "gpt-4-turbo-preview",
-      temperature: 0.7,
-      max_tokens: 2000,
-      presence_penalty: 0.2,
-      frequency_penalty: 0.3,
+      model: "gpt-3.5-turbo-1106",
+      temperature: 0.5,
+      max_tokens: 1500,
+      presence_penalty: 0,
+      frequency_penalty: 0,
+      response_format: { type: "text" }
     });
 
     const transformedContent = completion.choices[0]?.message?.content;
     if (!transformedContent) {
       throw new Error('No content generated');
     }
+
+    // Cache the result
+    transformationCache.set(cacheKey, {
+      content: transformedContent,
+      timestamp: Date.now()
+    });
 
     // Get the current user
     const { data: { user } } = await supabase.auth.getUser();

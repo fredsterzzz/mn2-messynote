@@ -95,10 +95,10 @@ function Pricing() {
               </p>
             </div>
 
-            <div>
-              <h3 className="font-semibold text-lg mb-2 text-text-primary">Is there a free trial?</h3>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2 text-text-primary">Is there a free trial?</h3>
               <p className="text-text-secondary">
-                Yes, we offer a 14-day free trial with full access to all features. No credit card required to start.
+                Yes, we offer a 14-day free trial with full access to all features.
               </p>
             </div>
 

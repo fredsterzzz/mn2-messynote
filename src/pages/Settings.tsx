@@ -293,20 +293,29 @@ function Settings() {
                     'Reset Credits'
                   )}
                 </button>
-                <button
-                  onClick={handleBillingPortal}
-                  disabled={isLoadingPortal}
-                  className="px-4 py-2 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {isLoadingPortal ? (
-                    <span className="flex items-center">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Loading...
-                    </span>
-                  ) : (
-                    'Manage Subscription'
-                  )}
-                </button>
+                {credits?.subscription_status === 'active' ? (
+                  <button
+                    onClick={handleBillingPortal}
+                    disabled={isLoadingPortal}
+                    className="px-4 py-2 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    {isLoadingPortal ? (
+                      <span className="flex items-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Loading...
+                      </span>
+                    ) : (
+                      'Manage Subscription'
+                    )}
+                  </button>
+                ) : (
+                  <a
+                    href="/pricing"
+                    className="px-4 py-2 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-all hover:scale-105 inline-flex items-center"
+                  >
+                    Upgrade to Premium
+                  </a>
+                )}
               </div>
             </div>
           </div>

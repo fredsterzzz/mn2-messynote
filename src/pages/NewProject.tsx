@@ -1,18 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, 
   ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, 
   GraduationCap, Sparkles, FileSearch, PencilRuler, Users,
   Calendar, GraduationCap as Resume, LightbulbIcon, Building2,
-  Camera, Upload, Star, Eye, Plus
+  Camera, Star, Eye, Plus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
 import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
-import { createWorker } from 'tesseract.js';
 
 const taskTemplates = [
   {
@@ -146,7 +145,7 @@ function NewProject() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { credits, checkCredits } = useCredits();
-  const [mode, setMode] = useState<'freeform' | 'task' | 'ocr'>('freeform');
+  const [mode, setMode] = useState<'freeform' | 'task'>('freeform');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState('');
@@ -155,68 +154,9 @@ function NewProject() {
   const [generatedContent, setGeneratedContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [ocrProgress, setOcrProgress] = useState(0);
-  const [ocrResult, setOcrResult] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      await handleOCR(file);
-    }
-  };
-
-  const handleOCR = async (file: File) => {
-    setIsLoading(true);
-    setError('');
-    setOcrProgress(0);
-    setOcrResult('');
-
-    try {
-      const worker = await createWorker({
-        logger: progress => {
-          if (progress.status === 'recognizing text') {
-            setOcrProgress(progress.progress);
-          }
-        }
-      });
-
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      
-      const { data: { text } } = await worker.recognize(file);
-      
-      if (!text || text.trim() === '') {
-        throw new Error('No text was found in the image');
-      }
-      
-      setOcrResult(text);
-      setNotes(text);
-      await worker.terminate();
-    } catch (err) {
-      console.error('OCR Error:', err);
-      setError(err instanceof Error ? err.message : 'Error processing image. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const generateContent = async () => {
@@ -310,7 +250,6 @@ function NewProject() {
               setSelectedTemplate('');
               setFormData({});
               setGeneratedContent('');
-              setOcrResult('');
             }}
             className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
               mode === 'freeform'
@@ -327,7 +266,6 @@ function NewProject() {
               setMode('task');
               setNotes('');
               setGeneratedContent('');
-              setOcrResult('');
             }}
             className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
               mode === 'task'
@@ -339,22 +277,18 @@ function NewProject() {
             <span>Task Helper</span>
           </button>
 
-          <button
-            onClick={() => {
-              setMode('ocr');
-              setNotes('');
-              setGeneratedContent('');
-              setOcrResult('');
-            }}
-            className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
-              mode === 'ocr'
-                ? 'border-accent-purple bg-background text-accent-purple'
-                : 'border-accent-purple/20 hover:border-accent-purple/40'
-            }`}
-          >
-            <Camera className="h-6 w-6 mr-2" />
-            <span>Extract Text</span>
-          </button>
+          <div className="relative">
+            <button
+              disabled
+              className="flex items-center p-4 rounded-lg border-2 border-accent-purple/20 opacity-75 cursor-not-allowed"
+            >
+              <Camera className="h-6 w-6 mr-2" />
+              <span>Extract Text</span>
+            </button>
+            <div className="absolute -top-2 -right-2 px-2 py-1 bg-accent-purple text-white text-xs rounded-full border border-background animate-pulse">
+              Coming Soon
+            </div>
+          </div>
         </div>
 
         {mode === 'freeform' ? (
@@ -513,86 +447,7 @@ function NewProject() {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex flex-col space-y-4">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center">
-                <Camera className="h-5 w-5 mr-2 text-accent-purple" />
-                Extract Text from Images
-              </h2>
-              <p className="text-text-secondary">
-                Upload an image containing text, and we'll extract it for you. Works best with clear, well-lit images.
-              </p>
-
-              <div 
-                className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors ${
-                  isDragging 
-                    ? 'border-accent-purple bg-accent-purple/5' 
-                    : 'border-accent-purple/20 bg-background hover:border-accent-purple/40'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleOCR(file);
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex flex-col items-center space-y-2"
-                  disabled={isLoading}
-                >
-                  <Upload className="h-8 w-8 text-accent-purple" />
-                  <span className="text-text-primary">Click to upload an image</span>
-                  <span className="text-sm text-text-secondary">or drag and drop</span>
-                </button>
-              </div>
-
-              {isLoading && (
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="w-full h-2 bg-background rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-accent-purple transition-all duration-300"
-                      style={{ width: `${Math.max(ocrProgress * 100, 10)}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-text-secondary">
-                    Processing image... {Math.round(ocrProgress * 100)}%
-                  </span>
-                </div>
-              )}
-
-              {ocrResult && (
-                <div className="space-y-4">
-                  <h3 className="text-md font-semibold text-text-primary">Extracted Text</h3>
-                  <div className="p-4 bg-background rounded-lg border border-accent-purple/20">
-                    <pre className="whitespace-pre-wrap text-text-primary font-mono text-sm">
-                      {ocrResult}
-                    </pre>
-                  </div>
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      onClick={() => {
-                        setMode('freeform');
-                        setNotes(ocrResult);
-                      }}
-                      className="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/90"
-                    >
-                      Continue to Editor
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <></>
         )}
 
         {error && (

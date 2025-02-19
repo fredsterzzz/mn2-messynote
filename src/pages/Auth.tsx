@@ -34,10 +34,13 @@ function Auth() {
   const handleGoogleSignIn = async () => {
     try {
       setError('');
+      setIsLoading(true);
       await signInWithGoogle();
       // Note: No need to navigate here as Supabase handles the redirect
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,14 +119,20 @@ function Auth() {
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center px-4 py-2 border border-accent-purple/20 rounded-md shadow-sm text-sm font-medium text-text-primary bg-background hover:bg-background-secondary transition-colors"
+              disabled={isLoading}
+              className={`w-full flex items-center justify-center px-4 py-2 border border-accent-purple/20 rounded-md shadow-sm text-sm font-medium text-text-primary hover:bg-background-secondary transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <img
-                className="h-5 w-5 mr-2"
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                alt="Google logo"
-              />
-              Continue with Google
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-accent-purple border-t-transparent rounded-full animate-spin"></div>
+                  Signing in...
+                </div>
+              ) : (
+                <>
+                  <img src="/google.svg" alt="Google logo" className="w-5 h-5 mr-2" />
+                  Continue with Google
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -90,7 +90,7 @@ function Footer() {
 
         <div className="mt-8 pt-8 border-t border-accent-purple/20">
           <p className="text-center text-text-secondary">
-            © {new Date().getFullYear()} MessyNotes.ai Ltd. All rights reserved.
+            &copy; {new Date().getFullYear()} MessyNotes.ai. All rights reserved.
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileText, Clock, BarChart, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, Clock, BarChart, Sparkles, Loader2, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import type { Project } from '../types/user';
@@ -12,6 +12,12 @@ function Dashboard() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -41,6 +47,14 @@ function Dashboard() {
     navigate(`/projects/${projectId}`);
   };
 
+  const handleNewProject = () => {
+    if (credits === 0) {
+      navigate('/pricing');
+    } else {
+      navigate('/new-project');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Welcome Section */}
@@ -59,14 +73,14 @@ function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <Link
-          to="/new-project"
+        <button
+          onClick={handleNewProject}
           className="bg-background-secondary p-8 rounded-xl border border-accent-purple/20 hover:border-accent-purple/40 transition-all hover:scale-105"
         >
           <FileText className="h-8 w-8 text-accent-purple mb-4" />
           <h3 className="text-lg font-semibold mb-2 text-text-primary">New Project</h3>
           <p className="text-text-secondary">Start transforming your notes</p>
-        </Link>
+        </button>
 
         <Link
           to="/my-projects"
@@ -139,12 +153,12 @@ function Dashboard() {
           ) : (
             <div className="text-center py-8">
               <p className="text-text-secondary">No projects yet.</p>
-              <Link
-                to="/new-project"
+              <button
+                onClick={handleNewProject}
                 className="text-accent-purple hover:text-accent-purple/80 transition-colors mt-2 inline-block"
               >
                 Create your first project
-              </Link>
+              </button>
             </div>
           )}
         </div>

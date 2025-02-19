@@ -1,8 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Sparkles, Wand2, Brain, Zap } from 'lucide-react';
 
 function LandingPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleTransformClick = () => {
+    if (user?.credits === 0) {
+      navigate('/pricing');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Hero Section */}
@@ -21,15 +33,15 @@ function LandingPage() {
             Using advanced AI to turn your unorganized thoughts into clean, structured, and professional content in seconds.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              to="/dashboard"
-              className="px-8 py-4 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            <button
+              onClick={handleTransformClick}
+              className="inline-block px-8 py-3 bg-gradient-to-r from-accent-purple to-accent-orange text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
             >
               <span className="flex items-center justify-center">
                 <Wand2 className="h-5 w-5 mr-2" />
-                Transform Your Notes
+                {user?.credits === 0 ? "Get Credits" : "Transform Your Notes"}
               </span>
-            </Link>
+            </button>
             <Link
               to="/pricing"
               className="px-8 py-4 bg-background-secondary text-text-primary border border-accent-purple/20 rounded-lg font-semibold hover:bg-background-secondary/80 transition-colors"

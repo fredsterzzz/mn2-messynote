@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { User, Bell, Shield, CreditCard, Loader2, AlertCircle, X } from 'lucide-react';
+import { User, Bell, Shield, CreditCard, Loader2, AlertCircle, X, Edit } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { createPortalSession } from '../services/stripe';
 import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
+import { Link } from 'react-router-dom';
 
 function Settings() {
   const { user } = useAuth();
@@ -306,6 +307,42 @@ function Settings() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Account Settings */}
+      <div className="bg-background-secondary rounded-xl border border-accent-purple/20 p-8">
+        <div className="flex items-center mb-6">
+          <User className="h-6 w-6 text-accent-purple mr-2" />
+          <h2 className="text-xl font-semibold text-text-primary">Account Settings</h2>
+        </div>
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-text-primary">Account Settings</h2>
+          {user?.user_metadata?.role === 'admin' && (
+            <div className="p-4 bg-background-secondary rounded-lg border border-accent-purple/20">
+              <h3 className="text-lg font-medium text-text-primary mb-4">Admin Tools</h3>
+              <Link
+                to="/admin/blog"
+                className="inline-flex items-center px-4 py-2 bg-gradient-cta text-white rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Manage Blog Posts
+              </Link>
+            </div>
+          )}
+          <div className="flex flex-col space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                className="w-full rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
+                value={user?.email || ''}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

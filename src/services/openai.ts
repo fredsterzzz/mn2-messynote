@@ -18,12 +18,12 @@ const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
 // Rate limiting
 const userRequestsMap = new Map<string, { count: number; resetTime: number }>();
-const MAX_REQUESTS_PER_HOUR = 20;
+const MAX_REQUESTS_PER_HOUR = 50; // Increased from 20 to 50
 const RATE_LIMIT_WINDOW = 1000 * 60 * 60; // 1 hour
 
 // Token limits
-const MAX_INPUT_TOKENS = 2000;
-const MAX_OUTPUT_TOKENS = 1500;
+const MAX_INPUT_TOKENS = 4000; // Increased from 2000 to 4000 (about 16,000 characters)
+const MAX_OUTPUT_TOKENS = 2000; // Increased from 1500 to 2000
 const AVERAGE_CHARS_PER_TOKEN = 4;
 
 // Function to generate cache key

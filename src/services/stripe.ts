@@ -15,7 +15,7 @@ export async function createCheckoutSession(userId: string) {
       body: JSON.stringify({
         priceId: SUBSCRIPTION_PRICE,
         userId,
-        successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+        successUrl: `${window.location.origin}/auth/callback?subscription=completed`,
         cancelUrl: `${window.location.origin}/pricing`,
       }),
     });

@@ -1,12 +1,29 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Check if this is a subscription completion
+    const isSubscriptionComplete = searchParams.get('subscription') === 'completed';
+    
+    if (isSubscriptionComplete) {
+      // Google Ads Conversion Tracking
+      const script = document.createElement('script');
+      script.innerHTML = `
+        gtag('event', 'conversion', {
+          'send_to': 'AW-16462248021',
+          'value': 9.99,
+          'currency': 'GBP'
+        });
+      `;
+      document.head.appendChild(script);
+    }
+
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         navigate('/dashboard');
@@ -14,7 +31,7 @@ export default function AuthCallback() {
         navigate('/auth');
       }
     });
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

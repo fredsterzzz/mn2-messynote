@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Bell, Shield, CreditCard, Loader2, AlertCircle, X, Edit } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
@@ -20,6 +20,36 @@ function Settings() {
     new: '',
     confirm: ''
   });
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    try {
+      // Check user metadata
+      const isAdminMeta = user.user_metadata?.role === 'admin';
+      
+      // Also check the profiles table
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      
+      const isAdminProfile = profile?.role === 'admin';
+      
+      // User is admin if either check passes
+      setIsAdmin(isAdminMeta || isAdminProfile);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
 
   // Check if user can change password (only email+password users can)
   const canChangePassword = user?.app_metadata?.provider === 'email';
@@ -101,7 +131,7 @@ function Settings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <BackButton to="/dashboard" label="Back to Dashboard" />
 
       <h1 className="text-3xl font-bold mb-8">
@@ -317,8 +347,8 @@ function Settings() {
         </div>
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-text-primary">Account Settings</h2>
-          {user?.user_metadata?.role === 'admin' && (
-            <div className="p-4 bg-background-secondary rounded-lg border border-accent-purple/20">
+          {isAdmin && (
+            <div className="p-4 bg-background rounded-lg border border-accent-purple/20">
               <h3 className="text-lg font-medium text-text-primary mb-4">Admin Tools</h3>
               <Link
                 to="/admin/blog"

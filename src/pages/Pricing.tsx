@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Sparkles } from 'lucide-react';
+import { createCheckoutSession } from '../services/stripe';
 import { useAuth } from '../context/AuthContext';
 
 function Pricing() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -12,7 +14,15 @@ function Pricing() {
       return;
     }
 
-    window.location.href = 'https://buy.stripe.com/3cs9CB0A7b0C1SE144';
+    setIsLoading(true);
+    try {
+      await createCheckoutSession(user.id);
+    } catch (error) {
+      console.error('Subscription error:', error);
+      alert('Failed to start subscription process. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const features = [
@@ -62,9 +72,10 @@ function Pricing() {
 
           <button
             onClick={handleSubscribe}
-            className="w-full py-4 px-8 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            disabled={isLoading}
+            className="w-full py-4 px-8 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Start Free Trial
+            {isLoading ? 'Processing...' : 'Start Free Trial'}
           </button>
           <p className="text-center text-sm text-text-secondary mt-4">
             14-day free trial, cancel anytime
@@ -95,10 +106,10 @@ function Pricing() {
               </p>
             </div>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2 text-text-primary">Is there a free trial?</h3>
+            <div>
+              <h3 className="font-semibold text-lg mb-2 text-text-primary">Is there a free trial?</h3>
               <p className="text-text-secondary">
-                Yes, we offer a 14-day free trial with full access to all features.
+                Yes, we offer a 14-day free trial with full access to all features. No credit card required to start.
               </p>
             </div>
 

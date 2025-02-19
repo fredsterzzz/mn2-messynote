@@ -85,9 +85,6 @@ app.post('/api/create-checkout-session', async (req, res) => {
         price: process.env.STRIPE_PRICE_ID,
         quantity: 1,
       }],
-      subscription_data: {
-        trial_period_days: 14
-      },
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: { user_id: userId }
@@ -141,54 +138,48 @@ app.post('/api/webhooks',
         process.env.STRIPE_WEBHOOK_SECRET
       );
     } catch (err) {
-      console.error(`Webhook Error: ${err.message}`);
+      console.error('Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle specific event types
-    switch (event.type) {
-      case 'checkout.session.completed':
-        const session = event.data.object;
-        // Update user's subscription status in Supabase
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .upsert({
-            user_id: session.client_reference_id,
-            stripe_customer_id: session.customer,
-            subscription_status: 'active',
-            price_id: session.subscription,
-            updated_at: new Date().toISOString()
-          });
-        
-        if (error) {
-          console.error('Error updating subscription:', error);
-          return res.status(500).json({ error: 'Failed to update subscription' });
+    try {
+      switch (event.type) {
+        case 'customer.subscription.created':
+        case 'customer.subscription.updated': {
+          const subscription = event.data.object;
+          
+          await supabase
+            .from('user_credits')
+            .update({
+              subscription_status: subscription.status,
+              subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', subscription.metadata.user_id);
+          break;
         }
-        break;
 
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted':
-        const subscription = event.data.object;
-        const status = event.type === 'customer.subscription.deleted' ? 'canceled' : subscription.status;
-        
-        const { error: subError } = await supabase
-          .from('user_subscriptions')
-          .update({
-            subscription_status: status,
-            updated_at: new Date().toISOString()
-          })
-          .eq('stripe_customer_id', subscription.customer);
-        
-        if (subError) {
-          console.error('Error updating subscription:', subError);
-          return res.status(500).json({ error: 'Failed to update subscription' });
+        case 'customer.subscription.deleted': {
+          const subscription = event.data.object;
+          
+          await supabase
+            .from('user_credits')
+            .update({
+              subscription_status: 'none',
+              subscription_end_date: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', subscription.metadata.user_id);
+          break;
         }
-        break;
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Error processing webhook:', error);
+      res.status(500).json({ error: 'Webhook processing failed' });
     }
-
-    res.json({ received: true });
-  }
-);
+});
 
 // Google OAuth callback
 app.get('/auth/google/callback', async (req, res) => {
@@ -197,7 +188,7 @@ app.get('/auth/google/callback', async (req, res) => {
   try {
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
-      token: String(code),
+      token: code as string,
       nonce: req.cookies['supabase-auth-nonce']
     });
 
@@ -210,8 +201,6 @@ app.get('/auth/google/callback', async (req, res) => {
     res.redirect(`${process.env.CLIENT_URL}/auth?error=Google authentication failed`);
   }
 });
-
-// Deployment trigger comment added at 2025-02-18T20:51:36Z
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

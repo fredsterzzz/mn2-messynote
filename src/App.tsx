@@ -16,6 +16,8 @@ import Contact from './pages/Contact';
 import Terms from './pages/Terms';
 import Auth from './pages/Auth';
 import AuthCallback from './pages/AuthCallback';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogPost />} />
         </Routes>
       </main>
       <Footer />

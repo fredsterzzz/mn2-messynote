@@ -15,7 +15,7 @@ export async function createCheckoutSession(userId: string) {
       body: JSON.stringify({
         priceId: SUBSCRIPTION_PRICE,
         userId,
-        successUrl: `${window.location.origin}/auth/callback?subscription=completed`,
+        successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/pricing`,
       }),
     });
@@ -40,27 +40,25 @@ export async function createCheckoutSession(userId: string) {
   }
 }
 
-export async function createPortalSession(userId: string): Promise<{ url: string }> {
-  const response = await fetch('/api/create-portal-session', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      userId,
-      returnUrl: `${window.location.origin}/settings`,
-    }),
-  });
+export async function createPortalSession(userId: string) {
+  try {
+    const response = await fetch('/api/create-portal-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to create portal session');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create portal session');
+    }
+
+    const { url } = await response.json();
+    window.location.href = url;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
   }
-
-  const { url } = await response.json();
-  if (!url) {
-    throw new Error('No portal URL received');
-  }
-
-  return { url };
 }

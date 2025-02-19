@@ -24,8 +24,52 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-cta': 'linear-gradient(to right, #8B5CF6, #F97316)',
-      }
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            color: '#E2E8F0',
+            h1: {
+              color: '#FFFFFF',
+            },
+            h2: {
+              color: '#FFFFFF',
+            },
+            h3: {
+              color: '#FFFFFF',
+            },
+            strong: {
+              color: '#FFFFFF',
+            },
+            a: {
+              color: '#8B5CF6',
+              '&:hover': {
+                color: '#F97316',
+              },
+            },
+            blockquote: {
+              borderLeftColor: '#8B5CF6',
+              color: '#E2E8F0',
+            },
+            code: {
+              color: '#F97316',
+            },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
+            pre: {
+              backgroundColor: '#111113',
+              color: '#E2E8F0',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }

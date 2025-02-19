@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, PenTool, Settings, FolderOpen, Loader2 } from 'lucide-react';
+import { Sparkles, PenTool, Settings, FolderOpen, Loader2, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
@@ -31,8 +31,11 @@ function Navbar() {
             </Link>
             <div className="hidden md:flex ml-10 space-x-8">
               <Link to="/about" className="text-text-secondary hover:text-accent-purple transition-colors">About</Link>
+              <Link to="/blog" className="text-text-secondary hover:text-accent-purple transition-colors flex items-center">
+                <BookOpen className="h-4 w-4 mr-1" />
+                Blog
+              </Link>
               <Link to="/pricing" className="text-text-secondary hover:text-accent-purple transition-colors">Pricing</Link>
-              <Link to="/blog" className="text-text-secondary hover:text-accent-purple transition-colors">Blog</Link>
               <Link to="/privacy" className="text-text-secondary hover:text-accent-purple transition-colors">Privacy</Link>
               <Link to="/contact" className="text-text-secondary hover:text-accent-purple transition-colors">Contact</Link>
             </div>
@@ -65,25 +68,24 @@ function Navbar() {
                 <button
                   onClick={handleSignOut}
                   disabled={isSigningOut}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-cta rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center"
+                  className="flex items-center px-4 py-2 rounded-lg bg-background border border-accent-purple/20 text-text-primary hover:border-accent-purple/40 transition-colors"
                 >
                   {isSigningOut ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Signing out...
-                    </>
+                    <Loader2 className="h-5 w-5 mr-1 animate-spin" />
                   ) : (
                     'Sign Out'
                   )}
                 </button>
               </>
             ) : (
-              <Link
-                to="/auth"
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-cta rounded-lg hover:opacity-90 transition-opacity"
-              >
-                Sign In
-              </Link>
+              location.pathname !== '/auth' && (
+                <Link
+                  to="/auth"
+                  className="flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-accent-purple to-accent-orange text-white font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Sign In
+                </Link>
+              )
             )}
           </div>
         </div>

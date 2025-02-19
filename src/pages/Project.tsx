@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Loader2, FileText, Wand2, Brain, PenTool, BookOpen, FileSearch } from 'lucide-react';
+import { ArrowLeft, Download, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import type { Project } from '../types/user';
@@ -49,21 +49,6 @@ function ProjectView() {
     document.body.removeChild(element);
   };
 
-  const getProjectTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'freeform':
-        return <PenTool className="h-5 w-5" />;
-      case 'task':
-        return <Brain className="h-5 w-5" />;
-      case 'blog':
-        return <BookOpen className="h-5 w-5" />;
-      case 'research':
-        return <FileSearch className="h-5 w-5" />;
-      default:
-        return <FileText className="h-5 w-5" />;
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -91,15 +76,10 @@ function ProjectView() {
       <div className="bg-background-secondary rounded-xl border border-accent-purple/20 p-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              {getProjectTypeIcon(project.type)}
-              <h1 className="text-2xl font-bold text-text-primary">{project.name}</h1>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-text-secondary">
-              <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
-              <span>•</span>
-              <span className="capitalize">{project.type} Note</span>
-            </div>
+            <h1 className="text-2xl font-bold text-text-primary mb-2">{project.name}</h1>
+            <p className="text-text-secondary">
+              Created on {new Date(project.created_at).toLocaleDateString()}
+            </p>
           </div>
           <button
             onClick={handleDownload}
@@ -110,25 +90,8 @@ function ProjectView() {
           </button>
         </div>
 
-        {(project.template || project.tone) && (
-          <div className="mb-6 flex gap-4 text-sm">
-            {project.template && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-accent-purple/10">
-                <Wand2 className="h-4 w-4 text-accent-purple" />
-                <span>Template: <span className="text-text-primary capitalize">{project.template}</span></span>
-              </div>
-            )}
-            {project.tone && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-accent-purple/10">
-                <FileText className="h-4 w-4 text-accent-purple" />
-                <span>Tone: <span className="text-text-primary capitalize">{project.tone}</span></span>
-              </div>
-            )}
-          </div>
-        )}
-
         <div className="prose prose-invert max-w-none">
-          <div className="bg-background rounded-lg p-6 border border-accent-purple/10 whitespace-pre-wrap">
+          <div className="bg-background rounded-lg p-6 border border-accent-purple/10">
             {project.content}
           </div>
         </div>

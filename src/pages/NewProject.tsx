@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, 
-  ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, 
-  GraduationCap, Sparkles, FileSearch, PencilRuler, Users,
-  Calendar, GraduationCap as Resume, LightbulbIcon, Building2,
-  Camera, Star, Eye, Plus
-} from 'lucide-react';
+import { FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, ShoppingBag, FileEdit, PenTool, Presentation, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
@@ -78,66 +72,6 @@ const taskTemplates = [
       { name: 'location', label: 'Location', placeholder: 'e.g., Los Angeles, CA' },
       { name: 'contact', label: 'Contact Info', placeholder: 'e.g., Email or phone number' }
     ]
-  },
-  {
-    id: 'event-planning',
-    name: 'Plan Event',
-    icon: <Calendar className="h-6 w-6" />,
-    fields: [
-      { name: 'name', label: 'Event Name', placeholder: 'e.g., Annual Tech Conference' },
-      { name: 'date', label: 'Date', placeholder: 'e.g., October 15-16, 2024' },
-      { name: 'location', label: 'Location', placeholder: 'e.g., Convention Center, City' },
-      { name: 'attendees', label: 'Expected Attendees', placeholder: 'e.g., 500' },
-      { name: 'description', label: 'Event Description', placeholder: 'Brief description of the event...' },
-      { name: 'schedule', label: 'Schedule', placeholder: 'Key timeline and activities' },
-      { name: 'budget', label: 'Budget', placeholder: 'e.g., $50,000' },
-      { name: 'requirements', label: 'Special Requirements', placeholder: 'e.g., AV equipment, catering' }
-    ]
-  },
-  {
-    id: 'resume',
-    name: 'Build Resume',
-    icon: <Resume className="h-6 w-6" />,
-    fields: [
-      { name: 'name', label: 'Full Name', placeholder: 'e.g., John Smith' },
-      { name: 'title', label: 'Professional Title', placeholder: 'e.g., Senior Software Engineer' },
-      { name: 'summary', label: 'Professional Summary', placeholder: 'Brief overview of your experience...' },
-      { name: 'experience', label: 'Work Experience', placeholder: 'List your relevant work experience...' },
-      { name: 'education', label: 'Education', placeholder: 'Your educational background...' },
-      { name: 'skills', label: 'Skills', placeholder: 'Key technical and soft skills...' },
-      { name: 'achievements', label: 'Achievements', placeholder: 'Notable accomplishments...' },
-      { name: 'contact', label: 'Contact Information', placeholder: 'Email, phone, LinkedIn...' }
-    ]
-  },
-  {
-    id: 'project-proposal',
-    name: 'Project Proposal',
-    icon: <LightbulbIcon className="h-6 w-6" />,
-    fields: [
-      { name: 'title', label: 'Project Title', placeholder: 'e.g., Mobile App Development' },
-      { name: 'summary', label: 'Executive Summary', placeholder: 'Brief overview of the project...' },
-      { name: 'objectives', label: 'Objectives', placeholder: 'Key goals and outcomes...' },
-      { name: 'scope', label: 'Project Scope', placeholder: 'What\'s included and excluded...' },
-      { name: 'timeline', label: 'Timeline', placeholder: 'Major milestones and deadlines...' },
-      { name: 'budget', label: 'Budget', placeholder: 'Cost breakdown and resources...' },
-      { name: 'risks', label: 'Risks & Mitigation', placeholder: 'Potential risks and solutions...' },
-      { name: 'team', label: 'Team & Resources', placeholder: 'Required team members and resources...' }
-    ]
-  },
-  {
-    id: 'business-plan',
-    name: 'Business Plan',
-    icon: <Building2 className="h-6 w-6" />,
-    fields: [
-      { name: 'name', label: 'Business Name', placeholder: 'e.g., Tech Solutions Inc.' },
-      { name: 'summary', label: 'Executive Summary', placeholder: 'Brief overview of the business...' },
-      { name: 'market', label: 'Market Analysis', placeholder: 'Target market and competition...' },
-      { name: 'product', label: 'Product/Service', placeholder: 'Description of offerings...' },
-      { name: 'strategy', label: 'Marketing Strategy', placeholder: 'How you\'ll reach customers...' },
-      { name: 'operations', label: 'Operations Plan', placeholder: 'Day-to-day operations...' },
-      { name: 'financials', label: 'Financial Projections', placeholder: 'Revenue, costs, funding needs...' },
-      { name: 'team', label: 'Management Team', placeholder: 'Key team members and roles...' }
-    ]
   }
 ];
 
@@ -165,6 +99,23 @@ function NewProject() {
       return;
     }
 
+    if (mode === 'task') {
+      const template = taskTemplates.find(t => t.id === selectedTemplate);
+      if (!template) return;
+
+      const missingFields = template.fields.filter(
+        field => !formData[field.name] || formData[field.name].trim() === ''
+      );
+
+      if (missingFields.length > 0) {
+        setError(`Please fill in all fields: ${missingFields.map(f => f.label).join(', ')}`);
+        return;
+      }
+    } else if (!notes.trim()) {
+      setError('Please enter your notes');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -176,45 +127,23 @@ function NewProject() {
       }
 
       let contentToTransform = '';
-      
       if (mode === 'task') {
         const template = taskTemplates.find(t => t.id === selectedTemplate);
-        if (!template) {
-          setError('Template not found');
-          return;
-        }
-
-        // Check if all required fields are filled
-        const missingFields = template.fields.filter(
-          field => !formData[field.name] || formData[field.name].trim() === ''
-        );
-
-        if (missingFields.length > 0) {
-          setError(`Please fill in all fields: ${missingFields.map(f => f.label).join(', ')}`);
-          return;
-        }
-
-        // Format the content for the task template
-        contentToTransform = template.fields
-          .map(field => `${field.label}: ${formData[field.name]}`)
-          .join('\n');
+        contentToTransform = template?.fields.map(
+          field => `${field.label}: ${formData[field.name]}`
+        ).join('\n') || '';
       } else {
-        if (!notes.trim()) {
-          setError('Please enter your notes');
-          return;
-        }
         contentToTransform = notes;
       }
 
       const result = await transformNotes(
         contentToTransform,
-        mode === 'task' ? 'business' : selectedType,
-        mode === 'task' ? 'professional' : selectedTone
+        selectedType,
+        selectedTone
       );
 
       setGeneratedContent(result);
     } catch (err) {
-      console.error('Generation error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
@@ -260,7 +189,6 @@ function NewProject() {
             <PenTool className="h-6 w-6 mr-2" />
             <span>Freeform Notes</span>
           </button>
-          
           <button
             onClick={() => {
               setMode('task');
@@ -276,82 +204,55 @@ function NewProject() {
             <FileEdit className="h-6 w-6 mr-2" />
             <span>Task Helper</span>
           </button>
-
-          <div className="relative">
-            <button
-              disabled
-              className="flex items-center p-4 rounded-lg border-2 border-accent-purple/20 opacity-75 cursor-not-allowed"
-            >
-              <Camera className="h-6 w-6 mr-2" />
-              <span>Extract Text</span>
-            </button>
-            <div className="absolute -top-2 -right-2 px-2 py-1 bg-accent-purple text-white text-xs rounded-full border border-background animate-pulse">
-              Coming Soon
-            </div>
-          </div>
         </div>
 
         {mode === 'freeform' ? (
           <>
-            {/* Template Selection */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center">
-                <Wand2 className="h-5 w-5 mr-2 text-accent-purple" />
-                Select Template
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {templates.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => setSelectedType(template.id)}
-                    className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                      selectedType === template.id
-                        ? 'border-accent-purple bg-background text-accent-purple'
-                        : 'border-accent-purple/20 hover:border-accent-purple/40'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center">
-                      {template.id === 'business' && <Briefcase className="h-6 w-6" />}
-                      {template.id === 'personal' && <FileText className="h-6 w-6" />}
-                      {template.id === 'sales' && <PenTool className="h-6 w-6" />}
-                      {template.id === 'academic' && <GraduationCap className="h-6 w-6" />}
-                      {template.id === 'creative' && <Sparkles className="h-6 w-6" />}
-                      {template.id === 'technical' && <FileEdit className="h-6 w-6" />}
-                      {template.id === 'meeting' && <Users className="h-6 w-6" />}
-                      {template.id === 'presentation' && <Presentation className="h-6 w-6" />}
-                      {template.id === 'blog' && <PencilRuler className="h-6 w-6" />}
-                      {template.id === 'research' && <FileSearch className="h-6 w-6" />}
-                      <span className="mt-2">{template.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+            {/* Grid of Content Types */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {templates.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => setSelectedType(template.id)}
+                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                    selectedType === template.id
+                      ? 'border-accent-purple bg-background text-accent-purple'
+                      : 'border-accent-purple/20 hover:border-accent-purple/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    {template.icon === '💼' && <Briefcase className="h-6 w-6" />}
+                    {template.icon === '📝' && <FileText className="h-6 w-6" />}
+                    {template.icon === '📈' && <PenTool className="h-6 w-6" />}
+                    {template.icon === '🎓' && <BookOpen className="h-6 w-6" />}
+                    {template.icon === '🎨' && <Wand2 className="h-6 w-6" />}
+                    {template.icon === '⚙️' && <FileEdit className="h-6 w-6" />}
+                    {template.icon === '👥' && <FileText className="h-6 w-6" />}
+                    {template.icon === '🎯' && <Presentation className="h-6 w-6" />}
+                    <span className="mt-2">{template.name}</span>
+                  </div>
+                </button>
+              ))}
             </div>
 
             {/* Tone Selection */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-accent-purple" />
-                Select Tone
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {tones.map((tone) => (
-                  <button
-                    key={tone.id}
-                    onClick={() => setSelectedTone(tone.id)}
-                    className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                      selectedTone === tone.id
-                        ? 'border-accent-purple bg-background text-accent-purple'
-                        : 'border-accent-purple/20 hover:border-accent-purple/40'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center">
-                      <span className="text-2xl mb-2">{tone.icon}</span>
-                      <span>{tone.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {tones.map((tone) => (
+                <button
+                  key={tone.id}
+                  onClick={() => setSelectedTone(tone.id)}
+                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                    selectedTone === tone.id
+                      ? 'border-accent-purple bg-background text-accent-purple'
+                      : 'border-accent-purple/20 hover:border-accent-purple/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl mb-2">{tone.icon}</span>
+                    <span>{tone.name}</span>
+                  </div>
+                </button>
+              ))}
             </div>
 
             {/* Notes Input */}
@@ -368,61 +269,30 @@ function NewProject() {
               />
             </div>
           </>
-        ) : mode === 'task' ? (
+        ) : (
           <div>
-            {/* Template Categories */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <Wand2 className="h-5 w-5 mr-2 text-accent-purple" />
-                  Select Template
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => {/* Toggle favorites */}}
-                    className="p-2 rounded-lg border border-accent-purple/20 hover:border-accent-purple/40"
-                    title="Show Favorites"
-                  >
-                    <Star className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => {/* Show preview */}}
-                    className="p-2 rounded-lg border border-accent-purple/20 hover:border-accent-purple/40"
-                    title="Preview Template"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => {/* Create custom template */}}
-                    className="p-2 rounded-lg border border-accent-purple/20 hover:border-accent-purple/40"
-                    title="Create Custom Template"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {taskTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => {
-                      setSelectedTemplate(template.id);
-                      setFormData({});
-                      setGeneratedContent('');
-                    }}
-                    className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                      selectedTemplate === template.id
-                        ? 'border-accent-purple bg-background text-accent-purple'
-                        : 'border-accent-purple/20 hover:border-accent-purple/40'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center">
-                      {template.icon}
-                      <span className="mt-2">{template.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+            {/* Template Selection */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {taskTemplates.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => {
+                    setSelectedTemplate(template.id);
+                    setFormData({});
+                    setGeneratedContent('');
+                  }}
+                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                    selectedTemplate === template.id
+                      ? 'border-accent-purple bg-background text-accent-purple'
+                      : 'border-accent-purple/20 hover:border-accent-purple/40'
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    {template.icon}
+                    <span className="mt-2">{template.name}</span>
+                  </div>
+                </button>
+              ))}
             </div>
 
             {selectedTemplate && (
@@ -446,8 +316,6 @@ function NewProject() {
               </div>
             )}
           </div>
-        ) : (
-          <></>
         )}
 
         {error && (

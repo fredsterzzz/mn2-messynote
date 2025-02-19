@@ -86,7 +86,7 @@ function Contact() {
               </span>
             </h2>
             <div className="space-y-2 text-text-secondary">
-              <p>MessyNotes.ai Ltd</p>
+              <p>MessyNotes</p>
             </div>
           </div>
         </div>

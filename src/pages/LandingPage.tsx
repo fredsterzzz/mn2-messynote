@@ -110,15 +110,17 @@ function LandingPage() {
                 ))}
               </ul>
 
-              <button
-                onClick={() => window.location.href = 'https://buy.stripe.com/3cs9CB0A7b0C1SE144'}
-                className="bg-gradient-to-r from-accent-purple to-accent-orange text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
-              >
-                Start Free Trial
-              </button>
-              <p className="text-center text-sm text-text-secondary mt-4">
-                14-day free trial, cancel anytime
-              </p>
+              <div className="flex flex-col items-center">
+                <button
+                  onClick={() => window.location.href = 'https://buy.stripe.com/3cs9CB0A7b0C1SE144'}
+                  className="w-full bg-gradient-to-r from-accent-purple to-accent-orange text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity text-center"
+                >
+                  Start Free Trial
+                </button>
+                <p className="text-center text-sm text-text-secondary mt-4">
+                  14-day free trial, cancel anytime
+                </p>
+              </div>
             </div>
           </div>
         </div>

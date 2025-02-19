@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Shield, CreditCard } from 'lucide-react';
+import { Bell, Shield, CreditCard, BookOpen, Plus } from 'lucide-react';
 import { createPortalSession } from '../services/stripe';
 
 export default function Settings() {
@@ -29,53 +29,89 @@ export default function Settings() {
   if (!user) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Settings</h1>
-      
-      <div className="flex space-x-4 mb-6">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-8">
+        <span className="bg-gradient-to-r from-accent-purple to-accent-orange bg-clip-text text-transparent">
+          Settings
+        </span>
+      </h1>
+
+      <div className="grid grid-cols-4 gap-4 mb-8">
         <button
           onClick={() => setActiveTab('notifications')}
-          className={`px-4 py-2 rounded-lg ${activeTab === 'notifications' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+          className={`flex items-center justify-center px-4 py-3 rounded-lg ${
+            activeTab === 'notifications'
+              ? 'bg-gradient-to-r from-accent-purple to-accent-orange text-white'
+              : 'bg-background-secondary border border-accent-purple/20 text-text-primary hover:border-accent-purple/40'
+          }`}
         >
+          <Bell className="h-5 w-5 mr-2" />
           Notifications
         </button>
         <button
           onClick={() => setActiveTab('security')}
-          className={`px-4 py-2 rounded-lg ${activeTab === 'security' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+          className={`flex items-center justify-center px-4 py-3 rounded-lg ${
+            activeTab === 'security'
+              ? 'bg-gradient-to-r from-accent-purple to-accent-orange text-white'
+              : 'bg-background-secondary border border-accent-purple/20 text-text-primary hover:border-accent-purple/40'
+          }`}
         >
+          <Shield className="h-5 w-5 mr-2" />
           Security
         </button>
         <button
           onClick={() => setActiveTab('billing')}
-          className={`px-4 py-2 rounded-lg ${activeTab === 'billing' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+          className={`flex items-center justify-center px-4 py-3 rounded-lg ${
+            activeTab === 'billing'
+              ? 'bg-gradient-to-r from-accent-purple to-accent-orange text-white'
+              : 'bg-background-secondary border border-accent-purple/20 text-text-primary hover:border-accent-purple/40'
+          }`}
         >
+          <CreditCard className="h-5 w-5 mr-2" />
           Billing
         </button>
         {isAdmin && (
           <button
             onClick={() => setActiveTab('blog')}
-            className={`px-4 py-2 rounded-lg ${activeTab === 'blog' ? 'bg-orange-500 text-white' : 'bg-gray-100'}`}
+            className={`flex items-center justify-center px-4 py-3 rounded-lg ${
+              activeTab === 'blog'
+                ? 'bg-gradient-to-r from-accent-purple to-accent-orange text-white'
+                : 'bg-background-secondary border border-accent-purple/20 text-text-primary hover:border-accent-purple/40'
+            }`}
           >
-            Blog Management
+            <BookOpen className="h-5 w-5 mr-2" />
+            Blog
           </button>
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-background-secondary rounded-xl border border-accent-purple/20 p-8">
         {activeTab === 'notifications' && (
           <div>
-            <div className="flex items-center mb-4">
-              <Bell className="h-5 w-5 mr-2 text-orange-500" />
-              <h2 className="text-xl font-semibold">Notification Preferences</h2>
+            <div className="flex items-center mb-6">
+              <Bell className="h-6 w-6 text-accent-purple mr-2" />
+              <h2 className="text-xl font-semibold">Notification Settings</h2>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <label className="font-medium">Email Notifications</label>
-                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
+                <div>
+                  <h3 className="font-medium">Email Notifications</h3>
+                  <p className="text-sm text-text-secondary">Receive updates about your projects</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-purple"></div>
+                </label>
               </div>
               <div className="flex items-center justify-between">
-                <label className="font-medium">Marketing Emails</label>
-                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
+                <div>
+                  <h3 className="font-medium">Marketing Emails</h3>
+                  <p className="text-sm text-text-secondary">Receive marketing and promotional emails</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-purple"></div>
+                </label>
               </div>
             </div>
           </div>
@@ -83,18 +119,30 @@ export default function Settings() {
 
         {activeTab === 'security' && (
           <div>
-            <div className="flex items-center mb-4">
-              <Shield className="h-5 w-5 mr-2 text-orange-500" />
+            <div className="flex items-center mb-6">
+              <Shield className="h-6 w-6 text-accent-purple mr-2" />
               <h2 className="text-xl font-semibold">Security Settings</h2>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <label className="font-medium">Two-Factor Authentication</label>
-                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
+                <div>
+                  <h3 className="font-medium">Two-Factor Authentication</h3>
+                  <p className="text-sm text-text-secondary">Add an extra layer of security to your account</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-purple"></div>
+                </label>
               </div>
               <div className="flex items-center justify-between">
-                <label className="font-medium">Auto Logout</label>
-                <input type="checkbox" className="form-checkbox h-5 w-5 text-orange-500" />
+                <div>
+                  <h3 className="font-medium">Auto Logout</h3>
+                  <p className="text-sm text-text-secondary">Automatically log out when inactive</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-background peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-purple"></div>
+                </label>
               </div>
             </div>
           </div>
@@ -102,15 +150,15 @@ export default function Settings() {
 
         {activeTab === 'billing' && (
           <div>
-            <div className="flex items-center mb-4">
-              <CreditCard className="h-5 w-5 mr-2 text-orange-500" />
+            <div className="flex items-center mb-6">
+              <CreditCard className="h-6 w-6 text-accent-purple mr-2" />
               <h2 className="text-xl font-semibold">Billing Settings</h2>
             </div>
             <div className="space-y-4">
               <button
                 onClick={handleBillingPortal}
                 disabled={isLoading}
-                className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-full px-4 py-2 bg-gradient-to-r from-accent-purple to-accent-orange text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {isLoading ? 'Loading...' : 'Manage Subscription'}
               </button>
@@ -120,15 +168,17 @@ export default function Settings() {
 
         {activeTab === 'blog' && isAdmin && (
           <div>
-            <div className="flex items-center mb-4">
-              <h2 className="text-xl font-semibold">Blog Management</h2>
-            </div>
-            <div className="space-y-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <BookOpen className="h-6 w-6 text-accent-purple mr-2" />
+                <h2 className="text-xl font-semibold">Blog Management</h2>
+              </div>
               <button
                 onClick={() => navigate('/admin/blog/new')}
-                className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="flex items-center px-4 py-2 bg-gradient-to-r from-accent-purple to-accent-orange text-white rounded-lg hover:opacity-90 transition-opacity"
               >
-                Create New Blog Post
+                <Plus className="h-4 w-4 mr-2" />
+                New Post
               </button>
             </div>
           </div>

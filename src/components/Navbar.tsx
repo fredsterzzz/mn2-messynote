@@ -68,7 +68,7 @@ function Navbar() {
                 <button
                   onClick={handleSignOut}
                   disabled={isSigningOut}
-                  className="flex items-center px-4 py-2 rounded-lg bg-background border border-accent-purple/20 text-text-primary hover:border-accent-purple/40 transition-colors"
+                  className="flex items-center px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600"
                 >
                   {isSigningOut ? (
                     <Loader2 className="h-5 w-5 mr-1 animate-spin" />

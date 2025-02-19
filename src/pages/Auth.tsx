@@ -120,19 +120,10 @@ function Auth() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className={`w-full flex items-center justify-center px-4 py-2 border border-accent-purple/20 rounded-md shadow-sm text-sm font-medium text-text-primary hover:bg-background-secondary transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="w-full h-12 text-lg flex items-center justify-center gap-2 bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
             >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-accent-purple border-t-transparent rounded-full animate-spin"></div>
-                  Signing in...
-                </div>
-              ) : (
-                <>
-                  <img src="/google.svg" alt="Google logo" className="w-5 h-5 mr-2" />
-                  Continue with Google
-                </>
-              )}
+              <img src="/google.svg" alt="Google" width={24} height={24} className="w-6 h-6" />
+              Sign in with Google
             </button>
           </div>
         </form>

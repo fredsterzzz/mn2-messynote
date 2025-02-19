@@ -110,12 +110,12 @@ function LandingPage() {
                 ))}
               </ul>
 
-              <Link
-                to="/auth"
-                className="block w-full py-4 px-8 bg-gradient-cta text-center rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
+              <button
+                onClick={() => window.location.href = 'https://buy.stripe.com/3cs9CB0A7b0C1SE144'}
+                className="bg-gradient-to-r from-accent-purple to-accent-orange text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
               >
                 Start Free Trial
-              </Link>
+              </button>
               <p className="text-center text-sm text-text-secondary mt-4">
                 14-day free trial, cancel anytime
               </p>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import CookieConsent from './components/CookieConsent';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import NewProject from './pages/NewProject';
@@ -15,10 +16,6 @@ import Contact from './pages/Contact';
 import Terms from './pages/Terms';
 import Auth from './pages/Auth';
 import AuthCallback from './pages/AuthCallback';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import AdminBlog from './pages/AdminBlog';
-import AdminBlogEdit from './pages/AdminBlogEdit';
 
 function App() {
   return (
@@ -36,17 +33,13 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
           <Route path="/pricing" element={<Pricing />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/admin/blog" element={<AdminBlog />} />
-          <Route path="/admin/blog/new" element={<AdminBlogEdit />} />
-          <Route path="/admin/blog/edit/:id" element={<AdminBlogEdit />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/terms" element={<Terms />} />
         </Routes>
       </main>
       <Footer />
+      <CookieConsent />
     </div>
   );
 }

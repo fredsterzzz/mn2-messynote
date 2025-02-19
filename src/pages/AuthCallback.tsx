@@ -20,13 +20,33 @@ export default function AuthCallback() {
       }
     };
 
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // Track the conversion when user successfully signs in
+    // Check current session immediately
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
         trackConversion();
         navigate('/dashboard');
-      } else if (event === 'SIGNED_OUT') {
-        navigate('/auth');
+        return true;
+      }
+      return false;
+    };
+
+    // Try to get current session first
+    checkSession().then(hasSession => {
+      // Only set up listener if we don't have a session yet
+      if (!hasSession) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session) {
+            trackConversion();
+            navigate('/dashboard');
+          } else if (event === 'SIGNED_OUT') {
+            navigate('/auth');
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
       }
     });
   }, [navigate]);

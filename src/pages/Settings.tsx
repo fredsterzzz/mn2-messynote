@@ -279,20 +279,6 @@ function Settings() {
                 )}
               </div>
               <div className="flex gap-4">
-                <button
-                  onClick={handleResetCredits}
-                  disabled={isResetting}
-                  className="px-4 py-2 bg-background-secondary text-text-primary border border-accent-purple/20 rounded-lg font-semibold hover:bg-background transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  {isResetting ? (
-                    <span className="flex items-center">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Resetting...
-                    </span>
-                  ) : (
-                    'Reset Credits'
-                  )}
-                </button>
                 {credits?.subscription_status === 'active' ? (
                   <button
                     onClick={handleBillingPortal}

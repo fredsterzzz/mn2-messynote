@@ -54,22 +54,22 @@ export default function AuthCallback() {
   return (
     <>
       <Helmet>
-        {/* Google tag (gtag.js) - Only loaded on this page */}
-        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_CONVERSION_ID}`}></script>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16869248021"></script>
         <script>
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GOOGLE_ADS_CONVERSION_ID}');
+            gtag('config', 'AW-16869248021');
           `}
         </script>
       </Helmet>
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 text-accent-purple animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-4">Completing sign in...</h2>
-          <p className="text-text-secondary">Please wait while we redirect you.</p>
+          <Loader2 className="h-8 w-8 animate-spin text-accent-purple mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Completing Sign In</h2>
+          <p className="text-text-secondary">Please wait while we redirect you...</p>
         </div>
       </div>
     </>

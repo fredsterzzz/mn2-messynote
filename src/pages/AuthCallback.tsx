@@ -1,37 +1,34 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+// Google Ads conversion tracking
+const GOOGLE_ADS_CONVERSION_ID = 'AW-16869248021';
+const GOOGLE_ADS_CONVERSION_LABEL = 'YOUR_CONVERSION_LABEL'; // You'll need to replace this with the actual label from Google Ads
+
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Check if this is a subscription completion
-    const isSubscriptionComplete = searchParams.get('subscription') === 'completed';
-    
-    if (isSubscriptionComplete) {
-      // Google Ads Conversion Tracking
-      const script = document.createElement('script');
-      script.innerHTML = `
-        gtag('event', 'conversion', {
-          'send_to': 'AW-16462248021',
-          'value': 9.99,
-          'currency': 'GBP'
+    const trackConversion = () => {
+      if (window.gtag) {
+        window.gtag('event', 'conversion', {
+          'send_to': `${GOOGLE_ADS_CONVERSION_ID}/${GOOGLE_ADS_CONVERSION_LABEL}`
         });
-      `;
-      document.head.appendChild(script);
-    }
+      }
+    };
 
     supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        // Track the conversion when user successfully signs in
+        trackConversion();
         navigate('/dashboard');
       } else if (event === 'SIGNED_OUT') {
         navigate('/auth');
       }
     });
-  }, [navigate, searchParams]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

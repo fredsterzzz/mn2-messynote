@@ -16,6 +16,16 @@ const openai = new OpenAI({
 const transformationCache = new Map<string, { content: string; timestamp: number }>();
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
+// Rate limiting
+const userRequestsMap = new Map<string, { count: number; resetTime: number }>();
+const MAX_REQUESTS_PER_HOUR = 20;
+const RATE_LIMIT_WINDOW = 1000 * 60 * 60; // 1 hour
+
+// Token limits
+const MAX_INPUT_TOKENS = 2000;
+const MAX_OUTPUT_TOKENS = 1500;
+const AVERAGE_CHARS_PER_TOKEN = 4;
+
 // Function to generate cache key
 function generateCacheKey(notes: string, template: string, tone: string): string {
   return `${notes}-${template}-${tone}`;
@@ -29,6 +39,32 @@ function cleanCache() {
       transformationCache.delete(key);
     }
   }
+}
+
+// Function to check rate limit
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const userRequests = userRequestsMap.get(userId);
+
+  if (!userRequests || now > userRequests.resetTime) {
+    userRequestsMap.set(userId, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW
+    });
+    return true;
+  }
+
+  if (userRequests.count >= MAX_REQUESTS_PER_HOUR) {
+    return false;
+  }
+
+  userRequests.count += 1;
+  return true;
+}
+
+// Function to estimate token count
+function estimateTokenCount(text: string): number {
+  return Math.ceil(text.length / AVERAGE_CHARS_PER_TOKEN);
 }
 
 const templatePrompts = {
@@ -170,6 +206,23 @@ export async function transformNotes(notes: string, template: string, tone: stri
   }
 
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check rate limit
+    if (!checkRateLimit(user.id)) {
+      throw new Error('Rate limit exceeded. Please try again in an hour.');
+    }
+
+    // Check input token limit
+    const estimatedTokens = estimateTokenCount(notes);
+    if (estimatedTokens > MAX_INPUT_TOKENS) {
+      throw new Error(`Input text is too long. Please reduce it by approximately ${Math.ceil((estimatedTokens - MAX_INPUT_TOKENS) * AVERAGE_CHARS_PER_TOKEN)} characters.`);
+    }
+
     // Clean old cache entries
     cleanCache();
 
@@ -216,7 +269,7 @@ ${notes}`;
       ],
       model,
       temperature: 0.5,
-      max_tokens: 1500,
+      max_tokens: MAX_OUTPUT_TOKENS,
       presence_penalty: 0,
       frequency_penalty: 0,
       response_format: { type: "text" }
@@ -233,14 +286,8 @@ ${notes}`;
       timestamp: Date.now()
     });
 
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
     // Save the project
-    const { data: project, error: saveError } = await supabase
+    const { error: saveError } = await supabase
       .from('projects')
       .insert([{
         user_id: user.id,

@@ -192,8 +192,8 @@ function NewProject() {
 
     try {
       const worker = await createWorker({
-        logger: m => {
-          if (m.status === 'recognizing text') {
+        logger: (m: any) => {
+          if (typeof m === 'object' && m.status === 'recognizing text' && typeof m.progress === 'number') {
             setOcrProgress(m.progress);
           }
         },

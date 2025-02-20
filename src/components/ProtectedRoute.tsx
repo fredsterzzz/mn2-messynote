@@ -10,7 +10,8 @@ interface Props {
 export default function ProtectedRoute({ children, requireOnboarding = true }: Props) {
   const { user, profile, loading } = useAuth();
 
-  if (loading) {
+  // Only show loading state if we're still loading AND we don't have user/profile data
+  if (loading && !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

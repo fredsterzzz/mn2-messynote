@@ -79,9 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session.user);
           const userProfile = await fetchProfile(session.user.id);
           setProfile(userProfile);
+        } else {
+          setUser(null);
+          setProfile(null);
         }
       } catch (error) {
         console.error('Error in setupUser:', error);
+        setUser(null);
+        setProfile(null);
       } finally {
         setLoading(false);
       }
@@ -98,17 +103,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         navigate('/');
       } else if (event === 'SIGNED_IN' && session) {
-        setLoading(true);
         setUser(session.user);
         
         try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError) {
+          const userProfile = await fetchProfile(session.user.id);
+          if (!userProfile) {
+            // Create new profile
             const newProfile = {
               id: session.user.id,
               email: session.user.email,
@@ -127,14 +127,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (insertError) {
               console.error('Error creating profile:', insertError);
+              setProfile(null);
             } else {
               setProfile(insertedProfile);
             }
           } else {
-            setProfile(profile);
+            setProfile(userProfile);
           }
         } catch (error) {
           console.error('Error handling sign in:', error);
+          setProfile(null);
         } finally {
           setLoading(false);
         }

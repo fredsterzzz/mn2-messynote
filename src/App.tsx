@@ -22,63 +22,15 @@ import BlogPost from './pages/BlogPost';
 import OnboardingSetup from './pages/OnboardingSetup';
 
 function App() {
-  console.log('App rendering'); // Debug log
   return (
     <div className="min-h-screen flex flex-col bg-background text-text-primary">
       <Navbar />
       <main className="flex-grow">
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route 
-            path="/onboarding" 
-            element={
-              <ProtectedRoute requireOnboarding={false}>
-                <OnboardingSetup />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/new-project" 
-            element={
-              <ProtectedRoute>
-                <NewProject />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-projects" 
-            element={
-              <ProtectedRoute>
-                <MyProjects />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/projects/:projectId" 
-            element={
-              <ProtectedRoute>
-                <Project />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } 
-          />
           <Route path="/about" element={<About />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -86,6 +38,58 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
+
+          {/* Protected routes that require auth but not onboarding */}
+          <Route 
+            path="/onboarding" 
+            element={
+              <ProtectedRoute requireAuth={true} requireOnboarding={false}>
+                <OnboardingSetup />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Protected routes that require both auth and completed onboarding */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/new-project" 
+            element={
+              <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                <NewProject />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-projects" 
+            element={
+              <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                <MyProjects />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/projects/:projectId" 
+            element={
+              <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                <Project />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute requireAuth={true} requireOnboarding={true}>
+                <Settings />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </main>
       <Footer />

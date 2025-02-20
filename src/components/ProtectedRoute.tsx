@@ -1,34 +1,39 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import Loader from './Loader';
 
 interface Props {
   children: React.ReactNode;
+  requireAuth?: boolean;
   requireOnboarding?: boolean;
 }
 
-export default function ProtectedRoute({ children, requireOnboarding = true }: Props) {
+export default function ProtectedRoute({
+  children,
+  requireAuth = true,
+  requireOnboarding = false,
+}: Props) {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
 
-  // Only show loading state if we're still loading AND we don't have user/profile data
+  // Show loading state only when we're loading AND we don't have user data yet
   if (loading && !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-accent-purple mx-auto mb-4" />
-          <p className="text-text-secondary">Loading your profile...</p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
+  // If we require authentication and there's no user, redirect to login
+  if (requireAuth && !user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // If we require onboarding and either there's no profile or onboarding is not completed
-  if (requireOnboarding && (!profile || !profile.has_completed_onboarding)) {
+  // If we require onboarding and the user hasn't completed it, redirect to onboarding
+  if (requireOnboarding && profile?.has_completed_onboarding === false) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // If we have a user but no profile, show loading state
+  if (user && !profile) {
+    return <Loader />;
   }
 
   return <>{children}</>;

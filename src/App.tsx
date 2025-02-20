@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CookieConsent from './components/CookieConsent';
+import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import NewProject from './pages/NewProject';
@@ -18,37 +19,78 @@ import Auth from './pages/Auth';
 import AuthCallback from './pages/AuthCallback';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
-import GoogleTag from './components/GoogleTag';
+import OnboardingSetup from './pages/OnboardingSetup';
 
 function App() {
+  console.log('App rendering'); // Debug log
   return (
-    <>
-      <GoogleTag />
-      <div className="min-h-screen flex flex-col bg-background text-text-primary">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/new-project" element={<NewProject />} />
-            <Route path="/my-projects" element={<MyProjects />} />
-            <Route path="/projects/:projectId" element={<Project />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:id" element={<BlogPost />} />
-          </Routes>
-        </main>
-        <Footer />
-        <CookieConsent />
-      </div>
-    </>
+    <div className="min-h-screen flex flex-col bg-background text-text-primary">
+      <Navbar />
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route 
+            path="/onboarding" 
+            element={
+              <ProtectedRoute requireOnboarding={false}>
+                <OnboardingSetup />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/new-project" 
+            element={
+              <ProtectedRoute>
+                <NewProject />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-projects" 
+            element={
+              <ProtectedRoute>
+                <MyProjects />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/projects/:projectId" 
+            element={
+              <ProtectedRoute>
+                <Project />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } 
+          />
+          <Route path="/about" element={<About />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogPost />} />
+        </Routes>
+      </main>
+      <Footer />
+      <CookieConsent />
+    </div>
   );
 }
 

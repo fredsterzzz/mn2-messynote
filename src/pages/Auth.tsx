@@ -1,146 +1,159 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Loader2 } from 'lucide-react';
 
-function Auth() {
+export default function Auth() {
+  const { signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    setLoading(true);
+    setError(null);
 
     try {
-      if (isSignUp) {
-        await signUp(email, password);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Check if user has completed onboarding
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('has_completed_onboarding')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!profile?.has_completed_onboarding) {
+        navigate('/onboarding');
       } else {
-        await signIn(email, password);
+        navigate('/dashboard');
       }
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (error: any) {
+      setError(error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleEmailSignUp = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      setError('Check your email for the confirmation link.');
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setError('');
-      setIsLoading(true);
       await signInWithGoogle();
-      // Note: No need to navigate here as Supabase handles the redirect
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
+      console.log('Google sign-in completed, waiting for redirect...');
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      setError(error.message);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-background-secondary border border-accent-purple/20 p-8 rounded-xl">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-text-primary">
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
-          </h2>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-sm mx-auto p-6">
+        <h1 className="text-2xl font-semibold text-center mb-6">Sign in to your account</h1>
+
+        <form onSubmit={handleEmailSignIn} className="space-y-4">
+          <div>
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-accent-purple"
+              required
+            />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-accent-purple"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 px-4 bg-gradient-to-r from-accent-purple to-accent-orange text-white rounded-md hover:opacity-90 disabled:opacity-50 transition-all"
+          >
+            {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'Sign in'}
+          </button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-background text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-all"
+          >
+            <img src="/google.svg" alt="Google" className="w-5 h-5" />
+            <span>Sign in with Google</span>
+          </button>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 p-4 rounded-lg flex items-center text-red-400 border border-red-500/20">
-            <AlertCircle className="h-5 w-5 mr-2" />
+          <div className="mt-4 p-3 text-sm text-red-600 bg-red-50 rounded-md">
             {error}
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-t-md relative block w-full px-3 py-2 bg-background border border-accent-purple/20 placeholder-text-secondary text-text-primary focus:outline-none focus:ring-accent-purple focus:border-accent-purple focus:z-10 sm:text-sm"
-                placeholder="Email address"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-b-md relative block w-full px-3 py-2 bg-background border border-accent-purple/20 placeholder-text-secondary text-text-primary focus:outline-none focus:ring-accent-purple focus:border-accent-purple focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-cta hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-purple transition-opacity disabled:opacity-50"
-            >
-              {isLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
-            </button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-accent-purple/20"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background-secondary text-text-secondary">Or continue with</span>
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full h-12 text-lg flex items-center justify-center gap-2 bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
-            >
-              <img src="/google.svg" alt="Google" width={24} height={24} className="w-6 h-6" />
-              Sign in with Google
-            </button>
-          </div>
-        </form>
-
-        <div className="text-center">
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{' '}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-accent-purple hover:text-accent-purple/80 transition-colors"
+            onClick={handleEmailSignUp}
+            className="text-accent-purple hover:text-accent-orange"
           >
-            {isSignUp
-              ? 'Already have an account? Sign in'
-              : "Don't have an account? Sign up"}
+            Sign up
           </button>
-        </div>
+        </p>
       </div>
     </div>
   );
 }
-
-export default Auth;

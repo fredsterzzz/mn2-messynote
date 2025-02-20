@@ -2,36 +2,34 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Loader2 } from 'lucide-react';
 
-const JOB_OPTIONS = [
-  'Software Engineer',
-  'Product Manager',
-  'Data Scientist',
-  'UX Designer',
-  'Student',
-  'Teacher/Professor',
-  'Marketing Specialist',
-  'Freelancer',
-  'Business Owner',
-  'Content Creator',
-  'Other Professional'
+const roles = [
+  { id: 'student', label: 'Student' },
+  { id: 'researcher', label: 'Researcher' },
+  { id: 'professional', label: 'Professional' },
+  { id: 'other', label: 'Other' }
 ];
 
 export default function OnboardingSetup() {
-  const { user, refreshProfile } = useAuth();
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const { user, profile, refreshProfile } = useAuth();
   const [selectedRole, setSelectedRole] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedRole) {
+      setError('Please select a role');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
     try {
-      setLoading(true);
-      setError('');
-
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           role: selectedRole,
@@ -40,115 +38,70 @@ export default function OnboardingSetup() {
         })
         .eq('id', user?.id);
 
-      if (error) throw error;
-      
-      // Refresh the profile in AuthContext
+      if (updateError) throw updateError;
+
+      // Refresh the profile to get the updated data
       await refreshProfile();
       
       // Navigate to new project page
-      navigate('/dashboard/new-project');
-    } catch (error) {
-      console.error("Profile update error:", error);
-      setError("Failed to save selection. Please try again.");
+      navigate('/new-project');
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile. Please try again.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (!user) {
-    navigate('/auth');
+  if (!user || !profile) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="max-w-md w-full space-y-8 p-8 bg-background-secondary rounded-lg shadow-lg">
         <div className="text-center">
-          <h2 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-accent-purple to-accent-orange bg-clip-text text-transparent">
-              Welcome to MessyNotes
-            </span>
-          </h2>
-          <p className="text-lg text-text-secondary">Let's personalize your experience</p>
+          <h2 className="text-3xl font-bold text-text-primary">Welcome!</h2>
+          <p className="mt-2 text-text-secondary">Tell us a bit about yourself</p>
         </div>
 
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">{error}</p>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-6 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-            <h3 className="text-2xl font-semibold text-center">
-              Select Your Primary Role
-            </h3>
-            
-            <select 
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full p-3 rounded-lg border border-accent-purple/20 bg-background focus:ring-2 focus:ring-accent-purple focus:border-accent-purple"
-            >
-              <option value="">Choose your role...</option>
-              {JOB_OPTIONS.map(role => (
-                <option key={role} value={role}>{role}</option>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div>
+            <label className="text-text-primary font-medium">What best describes your role?</label>
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              {roles.map((role) => (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => setSelectedRole(role.id)}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    selectedRole === role.id
+                      ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                      : 'border-border hover:border-accent-purple/50 text-text-secondary'
+                  }`}
+                >
+                  {role.label}
+                </button>
               ))}
-            </select>
-
-            {selectedRole && (
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <p className="text-green-700 flex items-center">
-                  <span className="font-semibold">Selected: {selectedRole}</span>
-                </p>
-              </div>
-            )}
-
-            <button
-              onClick={() => setStep(2)}
-              disabled={!selectedRole}
-              className="w-full bg-accent-purple text-white p-3 rounded-lg disabled:opacity-50 hover:bg-accent-purple-dark transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-6 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-            <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="text-xl font-semibold text-center text-blue-900 mb-2">
-                Confirm Your Selection
-              </h3>
-              <p className="text-center text-blue-800">
-                You've selected: <br />
-                <span className="text-2xl font-bold block mt-2">{selectedRole}</span>
-              </p>
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => setStep(1)}
-                className="flex-1 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Go Back
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 bg-accent-purple text-white p-3 rounded-lg hover:bg-accent-purple-dark disabled:opacity-50 transition-colors"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    <span>Saving...</span>
-                  </div>
-                ) : (
-                  'Confirm & Continue'
-                )}
-              </button>
             </div>
           </div>
-        )}
+
+          {error && (
+            <p className="text-red-500 text-sm">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !selectedRole}
+            className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all ${
+              isSubmitting || !selectedRole
+                ? 'bg-accent-purple/50 cursor-not-allowed'
+                : 'bg-accent-purple hover:bg-accent-purple/90'
+            }`}
+          >
+            {isSubmitting ? 'Setting up...' : 'Continue'}
+          </button>
+        </form>
       </div>
     </div>
   );

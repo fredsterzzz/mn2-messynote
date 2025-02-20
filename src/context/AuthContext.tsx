@@ -57,6 +57,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const createProfile = async (userId: string, email: string) => {
+    try {
+      const newProfile = {
+        id: userId,
+        email: email,
+        has_completed_onboarding: false,
+        credits: 5,
+        subscription_tier: 'free' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([newProfile])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        return null;
+      }
+
+      return data as Profile;
+    } catch (error) {
+      console.error('Error in createProfile:', error);
+      return null;
+    }
+  };
+
   const refreshProfile = async () => {
     if (!user) return;
     
@@ -78,15 +108,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           setUser(session.user);
           const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
-        } else {
-          setUser(null);
-          setProfile(null);
+          
+          if (!userProfile) {
+            const newProfile = await createProfile(session.user.id, session.user.email || '');
+            setProfile(newProfile);
+          } else {
+            setProfile(userProfile);
+          }
         }
       } catch (error) {
         console.error('Error in setupUser:', error);
-        setUser(null);
-        setProfile(null);
       } finally {
         setLoading(false);
       }
@@ -97,49 +128,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.id);
 
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         setUser(null);
         setProfile(null);
         setLoading(false);
         navigate('/');
-      } else if (event === 'SIGNED_IN' && session) {
-        setUser(session.user);
-        
-        try {
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          setUser(session.user);
           const userProfile = await fetchProfile(session.user.id);
+          
           if (!userProfile) {
-            // Create new profile
-            const newProfile = {
-              id: session.user.id,
-              email: session.user.email,
-              has_completed_onboarding: false,
-              credits: 5,
-              subscription_tier: 'free' as const,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            };
-
-            const { data: insertedProfile, error: insertError } = await supabase
-              .from('profiles')
-              .insert([newProfile])
-              .select()
-              .single();
-
-            if (insertError) {
-              console.error('Error creating profile:', insertError);
-              setProfile(null);
-            } else {
-              setProfile(insertedProfile);
-            }
+            const newProfile = await createProfile(session.user.id, session.user.email || '');
+            setProfile(newProfile);
           } else {
             setProfile(userProfile);
           }
-        } catch (error) {
-          console.error('Error handling sign in:', error);
-          setProfile(null);
-        } finally {
-          setLoading(false);
         }
+        setLoading(false);
       }
     });
 
@@ -187,6 +193,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Clear local state
+      setUser(null);
+      setProfile(null);
+      
+      // Navigate to home page
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

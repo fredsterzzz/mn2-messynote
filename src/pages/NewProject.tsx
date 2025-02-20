@@ -6,6 +6,19 @@ import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
 import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
+import { industries, Industry, Template, Tone } from '../data/industries';
+import { Button } from '../components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Card } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
 
 const taskTemplates = [
   {
@@ -88,6 +101,9 @@ function NewProject() {
   const [generatedContent, setGeneratedContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
+  const [selectedTones, setSelectedTones] = useState<string[]>([]);
+  const [projectName, setProjectName] = useState('');
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -148,6 +164,29 @@ function NewProject() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleIndustryChange = (industryId: string) => {
+    const industry = industries.find(i => i.id === industryId);
+    setSelectedIndustry(industry || null);
+    setSelectedTemplate('');
+    setSelectedTones([]);
+  };
+
+  const handleToneToggle = (toneId: string) => {
+    setSelectedTones(prev => {
+      if (prev.includes(toneId)) {
+        return prev.filter(id => id !== toneId);
+      } else {
+        return [...prev, toneId];
+      }
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Handle project creation
+    navigate('/dashboard');
   };
 
   return (
@@ -317,6 +356,81 @@ function NewProject() {
             )}
           </div>
         )}
+
+        {/* Industry Selection */}
+        <div className="space-y-4">
+          <Label htmlFor="industry">Industry/Career</Label>
+          <Select onValueChange={handleIndustryChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an industry" />
+            </SelectTrigger>
+            <SelectContent>
+              {industries.map((industry) => (
+                <SelectItem key={industry.id} value={industry.id}>
+                  {industry.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedIndustry && (
+          <>
+            <div className="space-y-4">
+              <Label>Structure</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedIndustry.templates.map((template: Template) => (
+                  <Card 
+                    key={template.id}
+                    className={`p-4 cursor-pointer ${
+                      selectedTemplate === template.id ? 'border-accent-purple' : ''
+                    }`}
+                    onClick={() => setSelectedTemplate(template.id)}
+                  >
+                    <h3 className="font-semibold">{template.name}</h3>
+                    <p className="text-sm text-gray-600">{template.description}</p>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label>Tone</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedIndustry.tones.map((tone: Tone) => (
+                  <div 
+                    key={tone.id}
+                    className="flex items-start space-x-3"
+                  >
+                    <Checkbox
+                      id={tone.id}
+                      checked={selectedTones.includes(tone.id)}
+                      onCheckedChange={() => handleToneToggle(tone.id)}
+                    />
+                    <div>
+                      <Label htmlFor={tone.id} className="font-semibold">
+                        {tone.name}
+                      </Label>
+                      <p className="text-sm text-gray-600">{tone.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Project Name */}
+        <div className="space-y-4">
+          <Label htmlFor="projectName">Project Name</Label>
+          <Input
+            id="projectName"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            placeholder="Enter project name"
+            required
+          />
+        </div>
 
         {error && (
           <div className="mt-6 p-4 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 flex items-center">

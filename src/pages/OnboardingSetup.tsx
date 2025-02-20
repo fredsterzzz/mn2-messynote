@@ -19,7 +19,7 @@ const JOB_OPTIONS = [
 ];
 
 export default function OnboardingSetup() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [selectedRole, setSelectedRole] = useState('');
@@ -35,11 +35,17 @@ export default function OnboardingSetup() {
         .from('profiles')
         .update({
           role: selectedRole,
-          has_completed_onboarding: true
+          has_completed_onboarding: true,
+          updated_at: new Date().toISOString()
         })
         .eq('id', user?.id);
 
       if (error) throw error;
+      
+      // Refresh the profile in AuthContext
+      await refreshProfile();
+      
+      // Navigate to new project page
       navigate('/dashboard/new-project');
     } catch (error) {
       console.error("Profile update error:", error);

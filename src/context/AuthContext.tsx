@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 interface Profile {
   id: string;
   email: string;
+  role?: string;
   has_completed_onboarding: boolean;
   credits: number;
   subscription_tier: 'free' | 'premium';
@@ -25,6 +26,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -36,141 +38,153 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+
+      return data as Profile;
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
       return null;
     }
+  };
 
-    return data as Profile;
+  const refreshProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const updatedProfile = await fetchProfile(user.id);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+    }
   };
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setProfile(profile);
+    const setupUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          setUser(session.user);
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+        }
+      } catch (error) {
+        console.error('Error in setupUser:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    // Listen for changes on auth state
+    setupUser();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, session?.user?.id);
 
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
+        setLoading(false);
         navigate('/');
       } else if (event === 'SIGNED_IN' && session) {
+        setLoading(true);
         setUser(session.user);
         
-        // Check if user has a profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        console.log('Profile check:', { profile, error: profileError });
-
-        if (profileError) {
-          // Create profile if it doesn't exist with free tier settings
-          const newProfile = {
-            id: session.user.id,
-            email: session.user.email,
-            has_completed_onboarding: false,
-            credits: 5, // Free users start with 5 credits
-            subscription_tier: 'free' as const,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-
-          const { error: insertError, data } = await supabase
+        try {
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .insert([newProfile])
-            .select()
+            .select('*')
+            .eq('id', session.user.id)
             .single();
 
-          if (!insertError && data) {
-            console.log('Created new profile with free tier, redirecting to onboarding');
-            setProfile(data);
-            navigate('/onboarding');
-          }
-        } else {
-          setProfile(profile);
-          if (!profile.has_completed_onboarding) {
-            console.log('Profile exists but onboarding not completed');
-            navigate('/onboarding');
+          if (profileError) {
+            const newProfile = {
+              id: session.user.id,
+              email: session.user.email,
+              has_completed_onboarding: false,
+              credits: 5,
+              subscription_tier: 'free' as const,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+
+            const { data: insertedProfile, error: insertError } = await supabase
+              .from('profiles')
+              .insert([newProfile])
+              .select()
+              .single();
+
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+            } else {
+              setProfile(insertedProfile);
+            }
           } else {
-            console.log('Profile exists and onboarding completed');
-            navigate('/dashboard');
+            setProfile(profile);
           }
+        } catch (error) {
+          console.error('Error handling sign in:', error);
+        } finally {
+          setLoading(false);
         }
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-    if (error) throw error;
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in:', error);
+      throw error;
+    }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing up:', error);
+      throw error;
+    }
   };
 
   const signInWithGoogle = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      }
-    });
-    setLoading(false);
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback'
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
     try {
-      // First clear local storage
-      localStorage.removeItem('sb-auth-token');
-      
-      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
-      // Clear the user state and profile
-      setUser(null);
-      setProfile(null);
-      
-      // Navigate to home page
-      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -186,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signOut,
       loading,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>

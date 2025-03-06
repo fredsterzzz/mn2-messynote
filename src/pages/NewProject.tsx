@@ -1,430 +1,281 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FileText, Wand2, Loader2, AlertCircle, MessageSquare, Briefcase, 
-  FileEdit, PenTool, Presentation, BookOpen, Sparkles, Star, 
-  Rocket, ChevronRight, Volume2, VolumeX
-} from 'lucide-react';
-import { industries, Industry } from '../data/industries';
-import { useAuth } from '../context/AuthContext';
-import { useCredits } from '../hooks/useCredits';
-import { transformNotes } from '../services/openai';
-import { supabase } from '../lib/supabase';
-import BackButton from '../components/BackButton';
+import { motion } from 'framer-motion';
+import { industries } from '../data/industries';
+import { tones } from '../data/tones';
 import EpicProgress from '../components/EpicProgress';
 import EpicTooltip from '../components/EpicTooltip';
-import WelcomeModal from '../components/WelcomeModal';
+import { Sparkles, Info } from 'lucide-react';
 
-const templates = [
-  {
-    id: 'business',
-    name: 'Business Document',
-    description: 'Transform your notes into a professional business document',
-    icon: Briefcase,
-    preview: 'From meeting notes to polished reports!'
-  },
-  {
-    id: 'creative',
-    name: 'Creative Writing',
-    description: 'Turn your notes into an engaging creative piece',
-    icon: PenTool,
-    preview: 'From ideas to captivating stories!'
-  },
-  {
-    id: 'academic',
-    name: 'Academic Paper',
-    description: 'Structure your notes into an academic format',
-    icon: BookOpen,
-    preview: 'From study notes to stellar papers!'
-  },
-  {
-    id: 'presentation',
-    name: 'Presentation',
-    description: 'Convert your notes into presentation slides',
-    icon: Presentation,
-    preview: 'From bullet points to epic slides!'
-  }
-];
-
-const tones = [
-  {
-    id: 'professional',
-    name: 'Professional',
-    description: 'Clear, formal, and business-appropriate',
-    icon: Briefcase,
-    preview: 'Perfect for business documents and reports'
-  },
-  {
-    id: 'casual',
-    name: 'Casual',
-    description: 'Friendly and conversational',
-    icon: MessageSquare,
-    preview: 'Great for blogs and social content'
-  },
-  {
-    id: 'technical',
-    name: 'Technical',
-    description: 'Detailed and precise technical language',
-    icon: FileEdit,
-    preview: 'Ideal for documentation and guides'
-  },
-  {
-    id: 'creative',
-    name: 'Creative',
-    description: 'Imaginative and expressive',
-    icon: Sparkles,
-    preview: 'Perfect for storytelling and creative pieces'
-  }
-];
-
-function NewProject() {
+export default function NewProject() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { credits, checkCredits } = useCredits();
-  const [selectedIndustry, setSelectedIndustry] = useState<Industry | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [selectedTones, setSelectedTones] = useState<string[]>([]);
-  const [projectName, setProjectName] = useState('');
-  const [notes, setNotes] = useState('');
-  const [generatedContent, setGeneratedContent] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showWelcome, setShowWelcome] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [projectName, setProjectName] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedTones, setSelectedTones] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    if (!projectName) {
-      setCurrentStep(0);
-    } else if (!selectedIndustry) {
-      setCurrentStep(1);
-    } else if (!selectedTemplate) {
-      setCurrentStep(2);
-    } else if (selectedTones.length === 0) {
-      setCurrentStep(3);
+  const handleNext = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
     } else {
-      setCurrentStep(4);
-    }
-  }, [projectName, selectedIndustry, selectedTemplate, selectedTones]);
-
-  const handleIndustryChange = (industryId: string) => {
-    const industry = industries.find(i => i.id === industryId);
-    if (soundEnabled) {
-      new Audio('/sounds/click.mp3').play().catch(() => {});
-    }
-    setSelectedIndustry(industry || null);
-    setSelectedTemplate('');
-    setSelectedTones([]);
-  };
-
-  const handleToneToggle = (toneId: string) => {
-    if (soundEnabled) {
-      new Audio('/sounds/toggle.mp3').play().catch(() => {});
-    }
-    setSelectedTones(prev => {
-      if (prev.includes(toneId)) {
-        return prev.filter(id => id !== toneId);
-      } else {
-        return [...prev, toneId];
-      }
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0) {
-      setError('Please complete all steps before proceeding.');
-      return;
-    }
-
-    if (soundEnabled) {
-      new Audio('/sounds/transform.mp3').play().catch(() => {});
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const result = await transformNotes({
-        notes,
-        industry: selectedIndustry.id,
-        template: selectedTemplate,
-        tones: selectedTones,
-      });
-
-      setGeneratedContent(result);
-      navigate('/content/' + result.id);
-    } catch (err) {
-      setError('Failed to transform notes. Please try again.');
-    } finally {
-      setIsLoading(false);
+      handleSubmit();
     }
   };
 
-  return (
-    <div className="cosmic-gradient min-h-screen">
-      {showWelcome && (
-        <WelcomeModal onClose={() => setShowWelcome(false)} />
-      )}
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <BackButton />
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="epic-button-secondary"
-            title={soundEnabled ? "Disable sound effects" : "Enable sound effects"}
+  const handleSubmit = () => {
+    // TODO: Implement project creation
+    navigate('/dashboard');
+  };
+
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 0:
+        return projectName.length > 0;
+      case 1:
+        return selectedIndustry !== null;
+      case 2:
+        return selectedTemplate !== null;
+      case 3:
+        return selectedTones.length > 0;
+      case 4:
+        return notes.length > 0;
+      default:
+        return false;
+    }
+  };
+
+  const selectedIndustryData = industries.find(i => i.id === selectedIndustry);
+  const templates = selectedIndustryData?.templates || [];
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-4"
           >
-            {soundEnabled ? (
-              <Volume2 className="h-5 w-5" />
-            ) : (
-              <VolumeX className="h-5 w-5" />
-            )}
-          </button>
-        </div>
-        
-        <div className="mb-8">
-          <EpicProgress currentStep={currentStep} totalSteps={5} />
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Project Name */}
-          <div className="epic-card">
-            <div className="flex items-center gap-3 mb-6">
-              <FileText className="epic-icon h-6 w-6 animate-bounce-gentle" />
-              <h2 className="text-2xl font-bold font-display">Name Your Epic Project</h2>
-            </div>
-            
-            <EpicTooltip content="Give your masterpiece an inspiring name that captures its essence!">
+            <h2 className="text-2xl font-bold mb-6">Name Your Masterpiece</h2>
+            <div className="space-y-2">
+              <label className="block text-text-secondary">Project Name</label>
               <input
                 type="text"
                 value={projectName}
-                onChange={(e) => {
-                  setProjectName(e.target.value);
-                  if (soundEnabled) {
-                    new Audio('/sounds/type.mp3').play().catch(() => {});
-                  }
-                }}
-                className="epic-input font-handwriting text-lg"
-                placeholder="e.g., My Study Guide Quest..."
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="Enter a name for your project..."
+                className="w-full p-3 bg-background-secondary rounded-lg border border-accent-purple/20 
+                         focus:border-accent-purple focus:ring-1 focus:ring-accent-purple outline-none
+                         placeholder:text-text-secondary/50"
               />
-            </EpicTooltip>
-          </div>
-
-          {/* Industry Selection */}
-          <div className="epic-card">
-            <div className="flex items-center gap-3 mb-6">
-              <Briefcase className="epic-icon h-6 w-6 animate-pulse" />
-              <h2 className="text-2xl font-bold font-display">Select Your Realm of Genius</h2>
             </div>
+          </motion.div>
+        );
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      case 1:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-bold mb-6">Choose Your Realm of Genius</h2>
+            <div className="grid grid-cols-2 gap-4">
               {industries.map((industry) => (
-                <EpicTooltip 
+                <EpicTooltip
                   key={industry.id}
-                  content={industry.description || industry.name}
+                  content={industry.description}
+                  position="right"
                 >
                   <button
-                    type="button"
-                    onClick={() => handleIndustryChange(industry.id)}
-                    className={`p-4 rounded-lg border transition-all ${
-                      selectedIndustry?.id === industry.id
-                        ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
-                        : 'border-accent-purple/20 hover:border-accent-purple/40'
+                    onClick={() => setSelectedIndustry(industry.id)}
+                    className={`w-full p-4 rounded-lg border transition-all duration-300 ${
+                      selectedIndustry === industry.id
+                        ? 'bg-gradient-cta border-accent-purple shadow-glow-sm'
+                        : 'bg-background-secondary border-accent-purple/20 hover:border-accent-purple/50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Briefcase className={`h-6 w-6 ${
-                        selectedIndustry?.id === industry.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
-                      }`} />
-                      <span className="text-text-primary font-medium">{industry.name}</span>
+                      <span className="text-lg">{industry.name}</span>
+                      {selectedIndustry === industry.id && (
+                        <Sparkles className="w-5 h-5 text-accent-purple animate-pulse" />
+                      )}
                     </div>
                   </button>
                 </EpicTooltip>
               ))}
             </div>
-          </div>
+          </motion.div>
+        );
 
-          {/* Template Selection */}
-          {selectedIndustry && (
-            <div className="epic-card">
-              <div className="flex items-center gap-3 mb-6">
-                <Presentation className="epic-icon h-6 w-6 animate-scale" />
-                <h2 className="text-2xl font-bold font-display">Pick Your Creative Blueprint</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {templates.map((template) => (
-                  <EpicTooltip
-                    key={template.id}
-                    content={
-                      <div className="space-y-2">
-                        <p>{template.description}</p>
-                        <p className="text-accent-purple">{template.preview}</p>
-                      </div>
-                    }
+      case 2:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-bold mb-6">Choose Your Creative Blueprint</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {templates.map((template) => (
+                <EpicTooltip
+                  key={template.id}
+                  content={
+                    <div className="space-y-2">
+                      <p>{template.description}</p>
+                      <p className="text-accent-purple">{template.preview}</p>
+                    </div>
+                  }
+                  position="right"
+                >
+                  <button
+                    onClick={() => setSelectedTemplate(template.id)}
+                    className={`w-full p-4 rounded-lg border transition-all duration-300 ${
+                      selectedTemplate === template.id
+                        ? 'bg-gradient-cta border-accent-purple shadow-glow-sm'
+                        : 'bg-background-secondary border-accent-purple/20 hover:border-accent-purple/50'
+                    }`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTemplate(template.id);
-                        if (soundEnabled) {
-                          new Audio('/sounds/select.mp3').play().catch(() => {});
-                        }
-                      }}
-                      className={`p-4 rounded-lg border transition-all ${
-                        selectedTemplate === template.id
-                          ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
-                          : 'border-accent-purple/20 hover:border-accent-purple/40'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {React.createElement(template.icon, {
-                          className: `h-6 w-6 ${
-                            selectedTemplate === template.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
-                          }`
-                        })}
-                        <span className="text-text-primary font-medium">{template.name}</span>
-                      </div>
-                    </button>
-                  </EpicTooltip>
-                ))}
-              </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{template.name}</span>
+                      {selectedTemplate === template.id && (
+                        <Sparkles className="w-5 h-5 text-accent-purple animate-pulse" />
+                      )}
+                    </div>
+                  </button>
+                </EpicTooltip>
+              ))}
             </div>
-          )}
+          </motion.div>
+        );
 
-          {/* Tone Selection */}
-          {selectedTemplate && (
-            <div className="epic-card">
-              <div className="flex items-center gap-3 mb-6">
-                <MessageSquare className="epic-icon h-6 w-6 animate-bounce-gentle" />
-                <h2 className="text-2xl font-bold font-display">Shape Your Unique Voice</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {tones.map((tone) => (
-                  <EpicTooltip
-                    key={tone.id}
-                    content={
-                      <div className="space-y-2">
-                        <p>{tone.description}</p>
-                        <p className="text-accent-purple">{tone.preview}</p>
-                      </div>
-                    }
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleToneToggle(tone.id)}
-                      className={`p-4 rounded-lg border transition-all ${
-                        selectedTones.includes(tone.id)
-                          ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
-                          : 'border-accent-purple/20 hover:border-accent-purple/40'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {React.createElement(tone.icon, {
-                          className: `h-6 w-6 ${
-                            selectedTones.includes(tone.id) ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
-                          }`
-                        })}
-                        <span className="text-text-primary font-medium">{tone.name}</span>
-                      </div>
-                    </button>
-                  </EpicTooltip>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Notes Input */}
-          {selectedTones.length > 0 && (
-            <div className="epic-card">
-              <div className="flex items-center gap-3 mb-6">
-                <FileEdit className="epic-icon h-6 w-6 animate-pulse" />
-                <h2 className="text-2xl font-bold font-display">Unleash Your Ideas</h2>
-              </div>
-
-              <EpicTooltip content="Drop your raw ideas here and watch them transform into something amazing!">
-                <div className="space-y-4">
-                  <textarea
-                    value={notes}
-                    onChange={(e) => {
-                      setNotes(e.target.value);
-                      if (soundEnabled) {
-                        new Audio('/sounds/type.mp3').play().catch(() => {});
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <h2 className="text-2xl font-bold mb-6">Define Your Voice</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {tones.map((tone) => (
+                <EpicTooltip
+                  key={tone.id}
+                  content={
+                    <div className="space-y-2">
+                      <p>{tone.description}</p>
+                      <p className="text-accent-purple">{tone.preview}</p>
+                    </div>
+                  }
+                  position="right"
+                >
+                  <button
+                    onClick={() => {
+                      if (selectedTones.includes(tone.id)) {
+                        setSelectedTones(selectedTones.filter(id => id !== tone.id));
+                      } else if (selectedTones.length < 2) {
+                        setSelectedTones([...selectedTones, tone.id]);
                       }
                     }}
-                    className="epic-input min-h-[200px] font-handwriting"
-                    placeholder="Drop your raw ideas here... Watch the magic unfold!"
-                  />
-                  
-                  {notes && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPreview(!showPreview)}
-                      className="epic-button-secondary w-full"
-                    >
-                      <Star className="h-5 w-5" />
-                      <span>{showPreview ? "Hide Preview" : "Show Preview"}</span>
-                    </button>
-                  )}
-
-                  {showPreview && notes && (
-                    <div className="p-4 bg-background/50 rounded-lg border border-accent-purple/20">
-                      <div className="text-center text-sm text-text-secondary">
-                        <div className="flex items-center justify-center gap-4">
-                          <div className="flex-1 p-3 bg-background rounded border border-accent-purple/20">
-                            <h4 className="font-bold mb-2">Your Notes</h4>
-                            <p className="font-handwriting text-left">
-                              {notes}
-                            </p>
-                          </div>
-                          <Wand2 className="h-6 w-6 text-accent-purple animate-pulse" />
-                          <div className="flex-1 p-3 bg-background rounded border border-accent-purple/20">
-                            <h4 className="font-bold mb-2">Preview</h4>
-                            <p className="text-left opacity-50">
-                              Your notes will be transformed into a polished {selectedTemplate} with a {selectedTones.join(', ')} tone!
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                    className={`w-full p-4 rounded-lg border transition-all duration-300 ${
+                      selectedTones.includes(tone.id)
+                        ? 'bg-gradient-cta border-accent-purple shadow-glow-sm'
+                        : 'bg-background-secondary border-accent-purple/20 hover:border-accent-purple/50'
+                    }`}
+                    disabled={selectedTones.length >= 2 && !selectedTones.includes(tone.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{tone.name}</span>
+                      {selectedTones.includes(tone.id) && (
+                        <Sparkles className="w-5 h-5 text-accent-purple animate-pulse" />
+                      )}
                     </div>
-                  )}
-                </div>
-              </EpicTooltip>
+                  </button>
+                </EpicTooltip>
+              ))}
             </div>
-          )}
+            <p className="text-sm text-text-secondary flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              Select up to 2 tones to blend
+            </p>
+          </motion.div>
+        );
 
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              <p className="text-red-500">{error}</p>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading || !projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0}
-            className="epic-button w-full bg-gradient-cta group"
+      case 4:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-4"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Crafting Your Masterpiece...</span>
-              </>
-            ) : (
-              <>
-                <Rocket className="h-5 w-5 group-hover:animate-bounce" />
-                <span>Unleash Your Masterpiece Now!</span>
-                <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
-        </form>
+            <h2 className="text-2xl font-bold mb-6">Share Your Raw Ideas</h2>
+            <div className="space-y-2">
+              <label className="block text-text-secondary">Your Notes</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Paste your messy notes here..."
+                className="w-full h-64 p-3 bg-background-secondary rounded-lg border border-accent-purple/20 
+                         focus:border-accent-purple focus:ring-1 focus:ring-accent-purple outline-none
+                         placeholder:text-text-secondary/50 resize-none"
+              />
+            </div>
+          </motion.div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="mb-12">
+        <EpicProgress currentStep={currentStep} totalSteps={5} />
+      </div>
+
+      <div className="mb-8">
+        {renderStep()}
+      </div>
+
+      <div className="flex justify-between">
+        <button
+          onClick={handleBack}
+          className={`px-6 py-2 rounded-lg transition-all duration-300 ${
+            currentStep === 0
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-background-secondary'
+          }`}
+          disabled={currentStep === 0}
+        >
+          Back
+        </button>
+
+        <button
+          onClick={handleNext}
+          disabled={!isStepValid()}
+          className={`px-6 py-2 rounded-lg transition-all duration-300 ${
+            isStepValid()
+              ? 'bg-gradient-cta hover:shadow-glow-sm'
+              : 'opacity-50 cursor-not-allowed'
+          }`}
+        >
+          {currentStep === 4 ? 'Create Project' : 'Next'}
+        </button>
       </div>
     </div>
   );
 }
-
-export default NewProject;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, FileText, Briefcase, Layout, MessageSquare, Wand2 } from 'lucide-react';
+import { CheckCircle, Circle } from 'lucide-react';
 
 interface EpicProgressProps {
   currentStep: number;
@@ -7,57 +7,83 @@ interface EpicProgressProps {
 }
 
 const steps = [
-  { icon: FileText, label: 'Name Your Project' },
-  { icon: Briefcase, label: 'Choose Industry' },
-  { icon: Layout, label: 'Select Template' },
-  { icon: MessageSquare, label: 'Pick Tone' },
-  { icon: Wand2, label: 'Add Notes' },
+  {
+    title: 'Name Your Project',
+    description: 'Give your masterpiece a name'
+  },
+  {
+    title: 'Choose Industry',
+    description: 'Select your realm of genius'
+  },
+  {
+    title: 'Pick Template',
+    description: 'Choose your creative blueprint'
+  },
+  {
+    title: 'Set Tone',
+    description: 'Define your unique voice'
+  },
+  {
+    title: 'Add Notes',
+    description: 'Share your raw ideas'
+  }
 ];
 
-export default function EpicProgress({ currentStep, totalSteps }: EpicProgressProps) {
-  const progress = (currentStep / (totalSteps - 1)) * 100;
-
+const EpicProgress: React.FC<EpicProgressProps> = ({ currentStep, totalSteps }) => {
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Sparkles className="h-5 w-5 text-accent-purple animate-pulse" />
-        <span className="text-lg font-medium">Your Progress</span>
-      </div>
-      
-      <div className="h-2 bg-background-secondary rounded-full overflow-hidden">
+    <div className="relative">
+      {/* Progress Bar */}
+      <div className="absolute top-1/2 left-0 w-full h-1 bg-background-secondary transform -translate-y-1/2">
         <div 
-          className="h-full bg-gradient-to-r from-accent-purple to-accent-orange transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
+          className="h-full bg-gradient-cta transition-all duration-500 ease-out"
+          style={{ width: `${(currentStep / (totalSteps - 1)) * 100}%` }}
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-5 gap-4">
+      {/* Steps */}
+      <div className="relative flex justify-between">
         {steps.map((step, index) => {
-          const Icon = step.icon;
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
 
           return (
             <div 
-              key={index}
-              className={`flex flex-col items-center text-center transition-all duration-300 ${
-                isCompleted ? 'text-accent-purple' : 
-                isCurrent ? 'text-text-primary' : 
-                'text-text-secondary/50'
+              key={step.title}
+              className={`flex flex-col items-center ${
+                isCurrent ? 'animate-bounce-gentle' : ''
               }`}
             >
-              <div className={`p-2 rounded-lg mb-2 ${
-                isCompleted ? 'bg-gradient-to-br from-accent-purple/20 to-accent-orange/20 shadow-glow-sm' :
-                isCurrent ? 'border border-accent-purple animate-pulse' :
-                'border border-text-secondary/10'
-              }`}>
-                <Icon className="h-5 w-5" />
+              <div 
+                className={`w-8 h-8 rounded-full flex items-center justify-center z-10
+                          transition-all duration-300 ${
+                  isCompleted ? 'bg-accent-purple text-white' :
+                  isCurrent ? 'bg-gradient-cta text-white shadow-glow-sm' :
+                  'bg-background-secondary text-text-secondary'
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle className="w-5 h-5" />
+                ) : (
+                  <Circle className="w-5 h-5" />
+                )}
               </div>
-              <span className="text-sm">{step.label}</span>
+              
+              <div className="absolute mt-12 text-center w-32 -ml-16">
+                <p className={`font-medium mb-1 ${
+                  isCurrent ? 'text-text-primary' : 'text-text-secondary'
+                }`}>
+                  {step.title}
+                </p>
+                <p className="text-sm text-text-secondary">
+                  {step.description}
+                </p>
+              </div>
             </div>
           );
         })}
       </div>
     </div>
   );
-}
+};
+
+export default EpicProgress;

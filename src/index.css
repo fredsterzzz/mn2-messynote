@@ -190,7 +190,7 @@ body {
            flex items-center gap-2 hover:opacity-90 
            disabled:opacity-50 disabled:cursor-not-allowed
            transition-all duration-300
-           animate-glow shadow-glow-md
+           shadow-glow-md
            hover:shadow-glow-lg hover:scale-105
            active:scale-95;
   }

@@ -11,13 +11,13 @@ function Footer() {
           <div className="space-y-4">
             <Link to="/" className="flex items-center">
               <Sparkles className="h-8 w-8 text-accent-purple" />
-              <span className="ml-2 text-xl font-bold text-text-primary">MessyNotes.ai</span>
+              <span className="ml-2 text-xl font-bold text-text-primary">www.messynotes.ai</span>
             </Link>
             <p className="text-text-secondary">
               Your AI-powered note transformation assistant. Turn messy thoughts into polished content instantly.
             </p>
             <p className="text-text-secondary text-sm">
-              MessyNotes.ai Ltd
+              www.messynotes.ai Ltd
             </p>
           </div>
 
@@ -90,7 +90,7 @@ function Footer() {
 
         <div className="mt-8 pt-8 border-t border-accent-purple/20">
           <p className="text-center text-text-secondary">
-            &copy; {new Date().getFullYear()} MessyNotes.ai. All rights reserved.
+            &copy; {new Date().getFullYear()} www.messynotes.ai. All rights reserved.
           </p>
         </div>
       </div>

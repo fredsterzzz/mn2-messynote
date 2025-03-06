@@ -27,7 +27,7 @@ function Navbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <Sparkles className="h-8 w-8 text-accent-purple" />
-              <span className="ml-2 text-xl font-bold text-text-primary">Messynotes.ai</span>
+              <span className="ml-2 text-xl font-bold text-text-primary">www.messynotes.ai</span>
             </Link>
             <div className="hidden md:flex ml-10 space-x-8">
               <Link to="/about" className="text-text-secondary hover:text-accent-purple transition-colors">About</Link>

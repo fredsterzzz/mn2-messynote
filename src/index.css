@@ -161,3 +161,154 @@ body {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
 }
+
+@layer base {
+  body {
+    @apply bg-background text-text-primary antialiased;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 85% 30%, rgba(249, 115, 22, 0.15) 0%, transparent 50%);
+  }
+}
+
+@layer components {
+  .epic-input {
+    @apply w-full bg-background border border-accent-purple/20 rounded-lg p-4 
+           text-text-primary placeholder-text-secondary/50 
+           focus:outline-none focus:border-accent-purple focus:shadow-glow-sm
+           transition-all duration-300 hover:border-accent-purple/40;
+  }
+
+  .epic-card {
+    @apply bg-background-secondary rounded-xl border border-accent-purple/20 p-8 
+           hover:shadow-glow-sm hover:border-accent-purple/40
+           transition-all duration-300;
+  }
+
+  .epic-button {
+    @apply bg-gradient-cta text-white font-medium px-6 py-3 rounded-lg
+           flex items-center gap-2 hover:opacity-90 
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-all duration-300
+           animate-glow shadow-glow-md
+           hover:shadow-glow-lg hover:scale-105
+           active:scale-95;
+  }
+
+  .epic-icon {
+    @apply text-accent-purple animate-bounce-gentle;
+  }
+
+  .epic-select {
+    @apply w-full bg-background border border-accent-purple/20 rounded-lg p-4
+           text-text-primary 
+           focus:outline-none focus:border-accent-purple focus:shadow-glow-sm
+           transition-all duration-300;
+  }
+
+  .epic-tooltip {
+    @apply absolute z-10 p-4 bg-background-secondary rounded-lg border border-accent-purple/20
+           shadow-glow-sm text-sm text-text-secondary
+           transition-all duration-300 transform;
+  }
+
+  .epic-progress {
+    @apply h-2 bg-background rounded-full overflow-hidden;
+  }
+
+  .epic-progress-bar {
+    @apply h-full bg-gradient-cta transition-all duration-300;
+  }
+
+  .epic-step {
+    @apply flex items-center gap-4 mb-8;
+  }
+
+  .epic-step-number {
+    @apply w-8 h-8 rounded-full bg-gradient-cta 
+           flex items-center justify-center text-white font-bold
+           shadow-glow-sm;
+  }
+
+  .epic-step-content {
+    @apply flex-1;
+  }
+
+  .cosmic-gradient {
+    @apply min-h-screen;
+    background: linear-gradient(135deg, #1a1040 0%, #0A0A0B 100%);
+    background-size: 200% 200%;
+    animation: cosmic 15s ease infinite;
+  }
+
+  @keyframes cosmic {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+
+  /* Sparkle effect */
+  .sparkle-container {
+    position: relative;
+  }
+
+  .sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: theme('colors.accent.purple');
+    animation: sparkle-float 3s ease-in-out infinite;
+    opacity: 0;
+  }
+
+  @keyframes sparkle-float {
+    0% { transform: translateY(0) scale(0); opacity: 0; }
+    50% { transform: translateY(-20px) scale(1); opacity: 0.8; }
+    100% { transform: translateY(-40px) scale(0); opacity: 0; }
+  }
+
+  /* Hover effects */
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+
+  .hover-glow:hover {
+    @apply shadow-glow-md;
+    transform: translateY(-2px);
+  }
+
+  /* Card animations */
+  .card-enter {
+    animation: card-enter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes card-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Input focus effects */
+  .input-focus-ring {
+    @apply transition-shadow duration-300;
+  }
+
+  .input-focus-ring:focus {
+    box-shadow: 0 0 0 2px theme('colors.accent.purple');
+  }
+
+  /* Button press effect */
+  .button-press {
+    @apply transition-transform duration-100;
+  }
+
+  .button-press:active {
+    transform: scale(0.95);
+  }
+}

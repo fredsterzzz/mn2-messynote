@@ -7,6 +7,9 @@ import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
 import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
+import EpicProgress from '../components/EpicProgress';
+import EpicTooltip from '../components/EpicTooltip';
+import WelcomeModal from '../components/WelcomeModal';
 
 function NewProject() {
   const navigate = useNavigate();
@@ -21,13 +24,22 @@ function NewProject() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showWelcome, setShowWelcome] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    // Update current step based on form completion
+    if (!projectName) {
+      setCurrentStep(0);
+    } else if (!selectedIndustry) {
+      setCurrentStep(1);
+    } else if (!selectedTemplate) {
+      setCurrentStep(2);
+    } else if (selectedTones.length === 0) {
+      setCurrentStep(3);
+    } else {
+      setCurrentStep(4);
+    }
+  }, [projectName, selectedIndustry, selectedTemplate, selectedTones]);
 
   const handleIndustryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const industry = industries.find(i => i.id === event.target.value);
@@ -49,7 +61,7 @@ function NewProject() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0) {
-      setError('Please fill in all required fields');
+      setError('Please complete all steps before proceeding.');
       return;
     }
 
@@ -57,231 +69,214 @@ function NewProject() {
     setError('');
 
     try {
-      const hasCredits = await checkCredits();
-      if (!hasCredits) {
-        navigate('/pricing?reason=no-credits');
-        return;
-      }
-
-      const result = await transformNotes(
+      const result = await transformNotes({
         notes,
-        selectedTemplate,
-        selectedTones.join(',')
-      );
+        industry: selectedIndustry.id,
+        template: selectedTemplate,
+        tones: selectedTones,
+      });
 
-      const { data, error: dbError } = await supabase
-        .from('projects')
-        .insert([
-          {
-            name: projectName,
-            industry_id: selectedIndustry.id,
-            template_id: selectedTemplate,
-            tones: selectedTones,
-            content: result,
-            user_id: user?.id,
-          },
-        ])
-        .select()
-        .single();
-
-      if (dbError) throw dbError;
-      navigate(`/project/${data.id}`);
+      setGeneratedContent(result);
+      // Navigate to the generated content view
+      navigate('/content/' + result.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError('Failed to transform notes. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen cosmic-gradient">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <BackButton />
-        
-        {showWelcome && (
-          <div className="mb-8 p-6 bg-background/80 backdrop-blur-lg rounded-xl border border-accent-purple/30 reveal-animation">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Sparkles className="h-8 w-8 text-accent-purple mr-3 sparkle-animation" />
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-accent-purple to-purple-400 bg-clip-text text-transparent">
-                  Welcome to MessyNotes.ai
-                </h1>
-              </div>
-              <p className="text-text-secondary">Your Gateway to Polished Brilliance!</p>
-            </div>
-          </div>
-        )}
-        
-        <div className="bg-background/80 backdrop-blur-lg rounded-xl border border-accent-purple/30 p-8 epic-card">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center reveal-animation reveal-delay-1">
-                <FileText className="h-8 w-8 text-accent-purple mr-3 float-animation" />
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-accent-purple to-purple-400 bg-clip-text text-transparent">
-                  Create Your Masterpiece
-                </h1>
-              </div>
-              {credits && (
-                <div className="text-text-secondary reveal-animation reveal-delay-2">
-                  {credits.subscription_status === 'active' ? (
-                    <span className="text-accent-purple pulse-animation">✨ Premium Plan</span>
-                  ) : (
-                    <span>Credits remaining: {credits.credits_remaining}</span>
-                  )}
-                </div>
-              )}
-            </div>
+    <div className="cosmic-gradient">
+      {showWelcome && (
+        <WelcomeModal onClose={() => setShowWelcome(false)} />
+      )}
 
-            {/* Project Name */}
-            <div className="reveal-animation reveal-delay-3">
-              <label className="block text-lg font-semibold text-text-primary mb-4">
-                Project Name
-              </label>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <BackButton />
+
+        <EpicProgress currentStep={currentStep} totalSteps={5} />
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Project Name */}
+          <div className="epic-card animate-reveal">
+            <div className="flex items-center gap-3 mb-6">
+              <FileText className="epic-icon h-6 w-6" />
+              <h2 className="text-2xl font-semibold">Name Your Epic Project</h2>
+            </div>
+            
+            <EpicTooltip content="Give your masterpiece an inspiring name that captures its essence!">
               <input
                 type="text"
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
-                placeholder="Enter your project name..."
-                className="w-full rounded-xl bg-background/50 backdrop-blur-sm border-2 border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20 p-4 transition-all"
-                required
+                className="epic-input"
+                placeholder="e.g., My Study Guide Hero..."
               />
+            </EpicTooltip>
+          </div>
+
+          {/* Industry Selection */}
+          <div className="epic-card animate-reveal">
+            <div className="flex items-center gap-3 mb-6">
+              <Briefcase className="epic-icon h-6 w-6" />
+              <h2 className="text-2xl font-semibold">Select Your Realm of Genius</h2>
             </div>
 
-            {/* Industry Selection */}
-            <div className="reveal-animation reveal-delay-4">
-              <label className="block text-lg font-semibold text-text-primary mb-4">
-                Choose Your Industry
-              </label>
-              <select
-                value={selectedIndustry?.id || ''}
-                onChange={handleIndustryChange}
-                className="w-full rounded-xl bg-background/50 backdrop-blur-sm border-2 border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20 p-4 transition-all"
-                required
-              >
-                <option value="">Select an industry</option>
-                {industries.map((industry) => (
-                  <option key={industry.id} value={industry.id}>
-                    {industry.name}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {industries.map((industry) => (
+                <EpicTooltip 
+                  key={industry.id}
+                  content={industry.description}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const event = { target: { value: industry.id } } as React.ChangeEvent<HTMLSelectElement>;
+                      handleIndustryChange(event);
+                    }}
+                    className={`p-4 rounded-lg border transition-all ${
+                      selectedIndustry?.id === industry.id
+                        ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
+                        : 'border-accent-purple/20 hover:border-accent-purple/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <industry.icon className={`h-6 w-6 ${
+                        selectedIndustry?.id === industry.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
+                      }`} />
+                      <span className="text-text-primary font-medium">{industry.name}</span>
+                    </div>
+                  </button>
+                </EpicTooltip>
+              ))}
             </div>
+          </div>
 
-            {/* Template Selection */}
-            {selectedIndustry && (
-              <div className="mb-8 reveal-animation">
-                <h2 className="text-lg font-semibold mb-4 text-text-primary">Choose Your Template</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {selectedIndustry.templates.map((template) => (
+          {/* Template Selection */}
+          {selectedIndustry && (
+            <div className="epic-card animate-reveal">
+              <div className="flex items-center gap-3 mb-6">
+                <Presentation className="epic-icon h-6 w-6" />
+                <h2 className="text-2xl font-semibold">Pick Your Creative Blueprint</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {templates.map((template) => (
+                  <EpicTooltip
+                    key={template.id}
+                    content={
+                      <div>
+                        <p className="font-medium mb-2">{template.name}</p>
+                        <p className="text-sm">{template.description}</p>
+                      </div>
+                    }
+                  >
                     <button
                       type="button"
-                      key={template.id}
                       onClick={() => setSelectedTemplate(template.id)}
-                      className={`epic-card p-6 rounded-xl border-2 text-center transition-all ${
+                      className={`p-4 rounded-lg border transition-all ${
                         selectedTemplate === template.id
-                          ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                          ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
                           : 'border-accent-purple/20 hover:border-accent-purple/40'
                       }`}
                     >
-                      <div className="flex flex-col items-center">
-                        <div className="h-12 w-12 mb-3 float-animation">
-                          {template.icon}
-                        </div>
-                        <span className="font-semibold">{template.name}</span>
-                        <span className="text-sm text-text-secondary mt-1">{template.description}</span>
+                      <div className="flex items-center gap-3">
+                        <template.icon className={`h-6 w-6 ${
+                          selectedTemplate === template.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
+                        }`} />
+                        <span className="text-text-primary font-medium">{template.name}</span>
                       </div>
                     </button>
-                  ))}
-                </div>
+                  </EpicTooltip>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Tone Selection */}
-            {selectedTemplate && (
-              <div className="mb-8">
-                <h2 className="text-lg font-semibold mb-4 text-text-primary">Set the Tone</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {selectedIndustry?.tones.map((tone) => (
+          {/* Tone Selection */}
+          {selectedTemplate && (
+            <div className="epic-card animate-reveal">
+              <div className="flex items-center gap-3 mb-6">
+                <MessageSquare className="epic-icon h-6 w-6" />
+                <h2 className="text-2xl font-semibold">Infuse Your Voice with Power</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {tones.map((tone) => (
+                  <EpicTooltip
+                    key={tone.id}
+                    content={tone.description}
+                  >
                     <button
                       type="button"
-                      key={tone.id}
                       onClick={() => handleToneToggle(tone.id)}
-                      className={`epic-card p-6 rounded-xl border-2 text-center transition-all ${
+                      className={`p-4 rounded-lg border transition-all ${
                         selectedTones.includes(tone.id)
-                          ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                          ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
                           : 'border-accent-purple/20 hover:border-accent-purple/40'
                       }`}
                     >
-                      <div className="flex flex-col items-center">
-                        <span className="text-3xl mb-3 float-animation">{tone.icon}</span>
-                        <span className="font-semibold">{tone.name}</span>
-                        <span className="text-sm text-text-secondary mt-1">{tone.description}</span>
-                      </div>
+                      <span className={`font-medium ${
+                        selectedTones.includes(tone.id) ? 'text-accent-purple' : 'text-text-secondary'
+                      }`}>{tone.name}</span>
                     </button>
-                  ))}
-                </div>
+                  </EpicTooltip>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Notes Input */}
-            <div className="mb-8">
-              <label className="block text-lg font-semibold text-text-primary mb-4">
-                Your Notes
-              </label>
-              <div className="relative">
+          {/* Notes Input */}
+          {selectedTones.length > 0 && (
+            <div className="epic-card animate-reveal">
+              <div className="flex items-center gap-3 mb-6">
+                <Wand2 className="epic-icon h-6 w-6" />
+                <h2 className="text-2xl font-semibold">Transform Your Notes</h2>
+              </div>
+
+              <EpicTooltip content="Paste your raw notes here and watch them transform into polished brilliance!">
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Paste or type your notes here..."
-                  rows={8}
-                  className="w-full rounded-xl bg-background/50 backdrop-blur-sm border-2 border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20 p-4 transition-all"
-                  required
+                  placeholder="Paste your messy notes here and watch the magic happen..."
+                  className="epic-input h-48 resize-none"
                 />
-                <div className="absolute bottom-4 right-4 text-text-secondary text-sm">
-                  {notes.length} characters
-                </div>
+              </EpicTooltip>
+
+              <div className="mt-2 text-text-secondary text-sm">
+                {notes.length} characters
               </div>
             </div>
+          )}
 
-            {error && (
-              <div className="mt-6 p-4 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20 flex items-center reveal-animation">
-                <AlertCircle className="h-5 w-5 mr-2" />
-                {error}
-              </div>
-            )}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-500 flex items-center gap-2 animate-reveal">
+              <AlertCircle className="h-5 w-5" />
+              {error}
+            </div>
+          )}
 
+          <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0 || isLoading}
-              className="epic-button w-full mt-8 flex items-center justify-center px-8 py-6 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              disabled={isLoading || !projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0}
+              className="epic-button"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="h-6 w-6 animate-spin mr-3" />
-                  <span>Crafting Your Masterpiece...</span>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Crafting Your Masterpiece...
                 </>
               ) : (
                 <>
-                  <Wand2 className="h-6 w-6 mr-3" />
-                  <span>Transform Your Notes</span>
+                  <Wand2 className="h-5 w-5" />
+                  Transform Your Notes
                 </>
               )}
             </button>
-
-            {/* Generated Content */}
-            {generatedContent && (
-              <div className="mt-8 p-6 bg-background/50 backdrop-blur-sm rounded-xl border-2 border-accent-purple/30 reveal-animation">
-                <div className="flex items-center mb-4">
-                  <Sparkles className="h-6 w-6 text-accent-purple mr-2 sparkle-animation" />
-                  <h2 className="text-lg font-semibold text-accent-purple">Your Polished Masterpiece</h2>
-                </div>
-                <div className="prose prose-invert max-w-none whitespace-pre-wrap">
-                  {generatedContent}
-                </div>
-              </div>
-            )}
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

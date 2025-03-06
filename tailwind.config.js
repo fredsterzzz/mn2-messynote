@@ -17,8 +17,8 @@ export default {
         'accent-orange': '#EA580C',
       },
       fontFamily: {
-        'montserrat': ['Montserrat', 'sans-serif'],
-        'opensans': ['Open Sans', 'sans-serif'],
+        'montserrat': ['Montserrat', 'system-ui', 'sans-serif'],
+        'opensans': ['Open Sans', 'system-ui', 'sans-serif'],
         'handwriting': ['Caveat', 'cursive'],
       },
       backgroundImage: {
@@ -83,7 +83,5 @@ export default {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
+  plugins: [],
 }

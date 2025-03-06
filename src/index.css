@@ -17,13 +17,13 @@
 
 @layer base {
   body {
-    @apply bg-background text-text-primary font-body antialiased;
+    @apply bg-background text-text-primary font-sans;
   }
 }
 
 @layer components {
   .cosmic-gradient {
-    background: radial-gradient(circle at top, var(--color-background-secondary) 0%, var(--color-background) 100%);
+    @apply bg-gradient-to-br from-background via-background-secondary to-background;
   }
 
   .cosmic-video-bg {
@@ -35,58 +35,55 @@
   }
 
   .epic-card {
-    @apply bg-background-secondary/50 backdrop-blur-sm rounded-xl border border-accent-purple/20 p-6 transition-all;
+    @apply p-6 rounded-lg border border-accent-purple/20 bg-background/50 backdrop-blur-sm;
   }
 
   .epic-button {
-    @apply flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all
-           shadow-glow-sm hover:shadow-glow-md active:scale-95 disabled:opacity-50 
-           disabled:cursor-not-allowed disabled:active:scale-100;
+    @apply px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 
+           transition-all duration-300 hover:shadow-glow-sm disabled:opacity-50 
+           disabled:cursor-not-allowed;
   }
 
   .epic-button-secondary {
-    @apply epic-button bg-background-secondary border border-accent-purple/20 
-           hover:border-accent-purple/40 text-text-secondary hover:text-text-primary;
+    @apply epic-button bg-background-secondary hover:bg-background-secondary/80;
   }
 
   .epic-input {
-    @apply w-full px-4 py-3 rounded-lg bg-background border border-accent-purple/20 
-           text-text-primary placeholder-text-secondary/50 transition-all
-           focus:outline-none focus:border-accent-purple focus:shadow-glow-sm;
+    @apply w-full px-4 py-3 bg-background-secondary rounded-lg border border-accent-purple/20 
+           focus:border-accent-purple focus:ring-1 focus:ring-accent-purple outline-none
+           placeholder:text-text-secondary/50;
   }
 
-  .bg-gradient-cta {
-    @apply bg-gradient-to-r from-accent-purple to-accent-orange 
-           hover:from-accent-orange hover:to-accent-purple;
+  .epic-icon {
+    @apply text-accent-purple;
   }
 
-  .bg-gradient-secondary {
-    @apply bg-gradient-to-r from-accent-purple/20 to-accent-orange/20
-           hover:from-accent-purple/30 hover:to-accent-orange/30;
+  .shadow-glow-sm {
+    @apply shadow-[0_0_15px_rgba(147,51,234,0.1)];
+  }
+
+  .shadow-glow {
+    @apply shadow-[0_0_30px_rgba(147,51,234,0.2)];
   }
 
   .bg-gradient-card {
     @apply bg-gradient-to-br from-accent-purple/10 to-accent-orange/10;
   }
 
-  .bg-gradient-text {
-    @apply bg-gradient-to-r from-accent-purple to-accent-orange bg-clip-text text-transparent;
-  }
-
-  .shadow-glow-sm {
-    box-shadow: 0 0 15px -3px var(--color-accent-purple);
-  }
-
-  .shadow-glow-md {
-    box-shadow: 0 0 30px -6px var(--color-accent-purple);
-  }
-
-  .shadow-glow-lg {
-    box-shadow: 0 0 45px -9px var(--color-accent-purple);
+  .bg-gradient-cta {
+    @apply bg-gradient-to-r from-accent-purple to-accent-orange text-white;
   }
 }
 
 @layer utilities {
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s infinite;
+  }
+
+  .animate-scale {
+    animation: scale 2s infinite;
+  }
+
   .font-display {
     font-family: 'Outfit', sans-serif;
   }
@@ -118,60 +115,78 @@
   .animate-glow {
     animation: glow 2s ease-in-out infinite;
   }
-}
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+  @keyframes bounce-gentle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
   }
-  50% {
-    opacity: 0.8;
-  }
-}
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
+  @keyframes scale {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
   }
-  50% {
-    transform: translateY(-10px);
-  }
-}
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) rotate(0);
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
   }
-  50% {
-    transform: translateY(-10px) rotate(2deg);
-  }
-}
 
-@keyframes wave {
-  0%, 100% {
-    transform: scale(1);
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
-  50% {
-    transform: scale(1.05);
-  }
-}
 
-@keyframes scribble {
-  0% {
-    transform: scale(0.8) rotate(-5deg);
-    opacity: 0;
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) rotate(0);
+    }
+    50% {
+      transform: translateY(-10px) rotate(2deg);
+    }
   }
-  100% {
-    transform: scale(1) rotate(0);
-    opacity: 1;
-  }
-}
 
-@keyframes glow {
-  0%, 100% {
-    filter: brightness(1);
+  @keyframes wave {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
   }
-  50% {
-    filter: brightness(1.2);
+
+  @keyframes scribble {
+    0% {
+      transform: scale(0.8) rotate(-5deg);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) rotate(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      filter: brightness(1);
+    }
+    50% {
+      filter: brightness(1.2);
+    }
   }
 }

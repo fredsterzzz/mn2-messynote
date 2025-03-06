@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Wand2, Loader2, AlertCircle, MessageSquare, Briefcase, FileEdit, PenTool, Presentation, BookOpen, Sparkles } from 'lucide-react';
+import { 
+  FileText, Wand2, Loader2, AlertCircle, MessageSquare, Briefcase, 
+  FileEdit, PenTool, Presentation, BookOpen, Sparkles, Star, 
+  Rocket, ChevronRight, Volume2, VolumeX
+} from 'lucide-react';
 import { industries, Industry } from '../data/industries';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
@@ -16,25 +20,29 @@ const templates = [
     id: 'business',
     name: 'Business Document',
     description: 'Transform your notes into a professional business document',
-    icon: Briefcase
+    icon: Briefcase,
+    preview: 'From meeting notes to polished reports!'
   },
   {
     id: 'creative',
     name: 'Creative Writing',
     description: 'Turn your notes into an engaging creative piece',
-    icon: PenTool
+    icon: PenTool,
+    preview: 'From ideas to captivating stories!'
   },
   {
     id: 'academic',
     name: 'Academic Paper',
     description: 'Structure your notes into an academic format',
-    icon: BookOpen
+    icon: BookOpen,
+    preview: 'From study notes to stellar papers!'
   },
   {
     id: 'presentation',
     name: 'Presentation',
     description: 'Convert your notes into presentation slides',
-    icon: Presentation
+    icon: Presentation,
+    preview: 'From bullet points to epic slides!'
   }
 ];
 
@@ -43,25 +51,29 @@ const tones = [
     id: 'professional',
     name: 'Professional',
     description: 'Clear, formal, and business-appropriate',
-    icon: Briefcase
+    icon: Briefcase,
+    preview: 'Perfect for business documents and reports'
   },
   {
     id: 'casual',
     name: 'Casual',
     description: 'Friendly and conversational',
-    icon: MessageSquare
+    icon: MessageSquare,
+    preview: 'Great for blogs and social content'
   },
   {
     id: 'technical',
     name: 'Technical',
     description: 'Detailed and precise technical language',
-    icon: FileEdit
+    icon: FileEdit,
+    preview: 'Ideal for documentation and guides'
   },
   {
     id: 'creative',
     name: 'Creative',
     description: 'Imaginative and expressive',
-    icon: Sparkles
+    icon: Sparkles,
+    preview: 'Perfect for storytelling and creative pieces'
   }
 ];
 
@@ -79,6 +91,8 @@ function NewProject() {
   const [error, setError] = useState('');
   const [showWelcome, setShowWelcome] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (!projectName) {
@@ -96,12 +110,18 @@ function NewProject() {
 
   const handleIndustryChange = (industryId: string) => {
     const industry = industries.find(i => i.id === industryId);
+    if (soundEnabled) {
+      new Audio('/sounds/click.mp3').play().catch(() => {});
+    }
     setSelectedIndustry(industry || null);
     setSelectedTemplate('');
     setSelectedTones([]);
   };
 
   const handleToneToggle = (toneId: string) => {
+    if (soundEnabled) {
+      new Audio('/sounds/toggle.mp3').play().catch(() => {});
+    }
     setSelectedTones(prev => {
       if (prev.includes(toneId)) {
         return prev.filter(id => id !== toneId);
@@ -116,6 +136,10 @@ function NewProject() {
     if (!projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0) {
       setError('Please complete all steps before proceeding.');
       return;
+    }
+
+    if (soundEnabled) {
+      new Audio('/sounds/transform.mp3').play().catch(() => {});
     }
 
     setIsLoading(true);
@@ -145,7 +169,20 @@ function NewProject() {
       )}
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <BackButton />
+        <div className="flex items-center justify-between mb-8">
+          <BackButton />
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="epic-button-secondary"
+            title={soundEnabled ? "Disable sound effects" : "Enable sound effects"}
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-5 w-5" />
+            ) : (
+              <VolumeX className="h-5 w-5" />
+            )}
+          </button>
+        </div>
         
         <div className="mb-8">
           <EpicProgress currentStep={currentStep} totalSteps={5} />
@@ -155,17 +192,22 @@ function NewProject() {
           {/* Project Name */}
           <div className="epic-card">
             <div className="flex items-center gap-3 mb-6">
-              <FileText className="epic-icon h-6 w-6" />
-              <h2 className="text-2xl font-semibold">Name Your Epic Project</h2>
+              <FileText className="epic-icon h-6 w-6 animate-bounce-gentle" />
+              <h2 className="text-2xl font-bold font-display">Name Your Epic Project</h2>
             </div>
             
             <EpicTooltip content="Give your masterpiece an inspiring name that captures its essence!">
               <input
                 type="text"
                 value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                className="epic-input"
-                placeholder="e.g., My Study Guide Hero..."
+                onChange={(e) => {
+                  setProjectName(e.target.value);
+                  if (soundEnabled) {
+                    new Audio('/sounds/type.mp3').play().catch(() => {});
+                  }
+                }}
+                className="epic-input font-handwriting text-lg"
+                placeholder="e.g., My Study Guide Quest..."
               />
             </EpicTooltip>
           </div>
@@ -173,8 +215,8 @@ function NewProject() {
           {/* Industry Selection */}
           <div className="epic-card">
             <div className="flex items-center gap-3 mb-6">
-              <Briefcase className="epic-icon h-6 w-6" />
-              <h2 className="text-2xl font-semibold">Select Your Realm of Genius</h2>
+              <Briefcase className="epic-icon h-6 w-6 animate-pulse" />
+              <h2 className="text-2xl font-bold font-display">Select Your Realm of Genius</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -208,19 +250,29 @@ function NewProject() {
           {selectedIndustry && (
             <div className="epic-card">
               <div className="flex items-center gap-3 mb-6">
-                <Presentation className="epic-icon h-6 w-6" />
-                <h2 className="text-2xl font-semibold">Pick Your Creative Blueprint</h2>
+                <Presentation className="epic-icon h-6 w-6 animate-scale" />
+                <h2 className="text-2xl font-bold font-display">Pick Your Creative Blueprint</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {templates.map((template) => (
                   <EpicTooltip
                     key={template.id}
-                    content={template.description}
+                    content={
+                      <div className="space-y-2">
+                        <p>{template.description}</p>
+                        <p className="text-accent-purple">{template.preview}</p>
+                      </div>
+                    }
                   >
                     <button
                       type="button"
-                      onClick={() => setSelectedTemplate(template.id)}
+                      onClick={() => {
+                        setSelectedTemplate(template.id);
+                        if (soundEnabled) {
+                          new Audio('/sounds/select.mp3').play().catch(() => {});
+                        }
+                      }}
                       className={`p-4 rounded-lg border transition-all ${
                         selectedTemplate === template.id
                           ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
@@ -246,15 +298,20 @@ function NewProject() {
           {selectedTemplate && (
             <div className="epic-card">
               <div className="flex items-center gap-3 mb-6">
-                <MessageSquare className="epic-icon h-6 w-6" />
-                <h2 className="text-2xl font-semibold">Choose Your Voice</h2>
+                <MessageSquare className="epic-icon h-6 w-6 animate-bounce-gentle" />
+                <h2 className="text-2xl font-bold font-display">Shape Your Unique Voice</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {tones.map((tone) => (
                   <EpicTooltip
                     key={tone.id}
-                    content={tone.description}
+                    content={
+                      <div className="space-y-2">
+                        <p>{tone.description}</p>
+                        <p className="text-accent-purple">{tone.preview}</p>
+                      </div>
+                    }
                   >
                     <button
                       type="button"
@@ -284,17 +341,57 @@ function NewProject() {
           {selectedTones.length > 0 && (
             <div className="epic-card">
               <div className="flex items-center gap-3 mb-6">
-                <FileEdit className="epic-icon h-6 w-6" />
-                <h2 className="text-2xl font-semibold">Your Notes</h2>
+                <FileEdit className="epic-icon h-6 w-6 animate-pulse" />
+                <h2 className="text-2xl font-bold font-display">Unleash Your Ideas</h2>
               </div>
 
-              <EpicTooltip content="Paste your notes here and watch them transform into something amazing!">
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="epic-input min-h-[200px]"
-                  placeholder="Paste your notes here..."
-                />
+              <EpicTooltip content="Drop your raw ideas here and watch them transform into something amazing!">
+                <div className="space-y-4">
+                  <textarea
+                    value={notes}
+                    onChange={(e) => {
+                      setNotes(e.target.value);
+                      if (soundEnabled) {
+                        new Audio('/sounds/type.mp3').play().catch(() => {});
+                      }
+                    }}
+                    className="epic-input min-h-[200px] font-handwriting"
+                    placeholder="Drop your raw ideas here... Watch the magic unfold!"
+                  />
+                  
+                  {notes && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPreview(!showPreview)}
+                      className="epic-button-secondary w-full"
+                    >
+                      <Star className="h-5 w-5" />
+                      <span>{showPreview ? "Hide Preview" : "Show Preview"}</span>
+                    </button>
+                  )}
+
+                  {showPreview && notes && (
+                    <div className="p-4 bg-background/50 rounded-lg border border-accent-purple/20">
+                      <div className="text-center text-sm text-text-secondary">
+                        <div className="flex items-center justify-center gap-4">
+                          <div className="flex-1 p-3 bg-background rounded border border-accent-purple/20">
+                            <h4 className="font-bold mb-2">Your Notes</h4>
+                            <p className="font-handwriting text-left">
+                              {notes}
+                            </p>
+                          </div>
+                          <Wand2 className="h-6 w-6 text-accent-purple animate-pulse" />
+                          <div className="flex-1 p-3 bg-background rounded border border-accent-purple/20">
+                            <h4 className="font-bold mb-2">Preview</h4>
+                            <p className="text-left opacity-50">
+                              Your notes will be transformed into a polished {selectedTemplate} with a {selectedTones.join(', ')} tone!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </EpicTooltip>
             </div>
           )}
@@ -309,17 +406,18 @@ function NewProject() {
           <button
             type="submit"
             disabled={isLoading || !projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0}
-            className="epic-button w-full"
+            className="epic-button w-full bg-gradient-cta group"
           >
             {isLoading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Transforming...</span>
+                <span>Crafting Your Masterpiece...</span>
               </>
             ) : (
               <>
-                <Wand2 className="h-5 w-5" />
-                <span>Transform Notes</span>
+                <Rocket className="h-5 w-5 group-hover:animate-bounce" />
+                <span>Unleash Your Masterpiece Now!</span>
+                <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </>
             )}
           </button>

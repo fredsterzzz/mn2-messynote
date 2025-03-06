@@ -1,15 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, Sparkles } from 'lucide-react';
-import { industries, Industry, Template, Tone } from '../data/industries';
+import { FileText, Wand2, Loader2, AlertCircle, MessageSquare, Briefcase, FileEdit, PenTool, Presentation, BookOpen, Sparkles } from 'lucide-react';
+import { industries, Industry } from '../data/industries';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
-import { transformNotes, templates, tones } from '../services/openai';
+import { transformNotes } from '../services/openai';
 import { supabase } from '../lib/supabase';
 import BackButton from '../components/BackButton';
 import EpicProgress from '../components/EpicProgress';
 import EpicTooltip from '../components/EpicTooltip';
 import WelcomeModal from '../components/WelcomeModal';
+
+const templates = [
+  {
+    id: 'business',
+    name: 'Business Document',
+    description: 'Transform your notes into a professional business document',
+    icon: Briefcase
+  },
+  {
+    id: 'creative',
+    name: 'Creative Writing',
+    description: 'Turn your notes into an engaging creative piece',
+    icon: PenTool
+  },
+  {
+    id: 'academic',
+    name: 'Academic Paper',
+    description: 'Structure your notes into an academic format',
+    icon: BookOpen
+  },
+  {
+    id: 'presentation',
+    name: 'Presentation',
+    description: 'Convert your notes into presentation slides',
+    icon: Presentation
+  }
+];
+
+const tones = [
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'Clear, formal, and business-appropriate',
+    icon: Briefcase
+  },
+  {
+    id: 'casual',
+    name: 'Casual',
+    description: 'Friendly and conversational',
+    icon: MessageSquare
+  },
+  {
+    id: 'technical',
+    name: 'Technical',
+    description: 'Detailed and precise technical language',
+    icon: FileEdit
+  },
+  {
+    id: 'creative',
+    name: 'Creative',
+    description: 'Imaginative and expressive',
+    icon: Sparkles
+  }
+];
 
 function NewProject() {
   const navigate = useNavigate();
@@ -27,7 +81,6 @@ function NewProject() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // Update current step based on form completion
     if (!projectName) {
       setCurrentStep(0);
     } else if (!selectedIndustry) {
@@ -41,8 +94,8 @@ function NewProject() {
     }
   }, [projectName, selectedIndustry, selectedTemplate, selectedTones]);
 
-  const handleIndustryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const industry = industries.find(i => i.id === event.target.value);
+  const handleIndustryChange = (industryId: string) => {
+    const industry = industries.find(i => i.id === industryId);
     setSelectedIndustry(industry || null);
     setSelectedTemplate('');
     setSelectedTones([]);
@@ -77,7 +130,6 @@ function NewProject() {
       });
 
       setGeneratedContent(result);
-      // Navigate to the generated content view
       navigate('/content/' + result.id);
     } catch (err) {
       setError('Failed to transform notes. Please try again.');
@@ -87,19 +139,21 @@ function NewProject() {
   };
 
   return (
-    <div className="cosmic-gradient">
+    <div className="cosmic-gradient min-h-screen">
       {showWelcome && (
         <WelcomeModal onClose={() => setShowWelcome(false)} />
       )}
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <BackButton />
-
-        <EpicProgress currentStep={currentStep} totalSteps={5} />
+        
+        <div className="mb-8">
+          <EpicProgress currentStep={currentStep} totalSteps={5} />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Project Name */}
-          <div className="epic-card animate-reveal">
+          <div className="epic-card">
             <div className="flex items-center gap-3 mb-6">
               <FileText className="epic-icon h-6 w-6" />
               <h2 className="text-2xl font-semibold">Name Your Epic Project</h2>
@@ -117,7 +171,7 @@ function NewProject() {
           </div>
 
           {/* Industry Selection */}
-          <div className="epic-card animate-reveal">
+          <div className="epic-card">
             <div className="flex items-center gap-3 mb-6">
               <Briefcase className="epic-icon h-6 w-6" />
               <h2 className="text-2xl font-semibold">Select Your Realm of Genius</h2>
@@ -127,14 +181,11 @@ function NewProject() {
               {industries.map((industry) => (
                 <EpicTooltip 
                   key={industry.id}
-                  content={industry.description}
+                  content={industry.description || industry.name}
                 >
                   <button
                     type="button"
-                    onClick={() => {
-                      const event = { target: { value: industry.id } } as React.ChangeEvent<HTMLSelectElement>;
-                      handleIndustryChange(event);
-                    }}
+                    onClick={() => handleIndustryChange(industry.id)}
                     className={`p-4 rounded-lg border transition-all ${
                       selectedIndustry?.id === industry.id
                         ? 'border-accent-purple bg-gradient-card shadow-glow-sm'
@@ -142,7 +193,7 @@ function NewProject() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <industry.icon className={`h-6 w-6 ${
+                      <Briefcase className={`h-6 w-6 ${
                         selectedIndustry?.id === industry.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
                       }`} />
                       <span className="text-text-primary font-medium">{industry.name}</span>
@@ -155,7 +206,7 @@ function NewProject() {
 
           {/* Template Selection */}
           {selectedIndustry && (
-            <div className="epic-card animate-reveal">
+            <div className="epic-card">
               <div className="flex items-center gap-3 mb-6">
                 <Presentation className="epic-icon h-6 w-6" />
                 <h2 className="text-2xl font-semibold">Pick Your Creative Blueprint</h2>
@@ -165,12 +216,7 @@ function NewProject() {
                 {templates.map((template) => (
                   <EpicTooltip
                     key={template.id}
-                    content={
-                      <div>
-                        <p className="font-medium mb-2">{template.name}</p>
-                        <p className="text-sm">{template.description}</p>
-                      </div>
-                    }
+                    content={template.description}
                   >
                     <button
                       type="button"
@@ -182,9 +228,11 @@ function NewProject() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <template.icon className={`h-6 w-6 ${
-                          selectedTemplate === template.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
-                        }`} />
+                        {React.createElement(template.icon, {
+                          className: `h-6 w-6 ${
+                            selectedTemplate === template.id ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
+                          }`
+                        })}
                         <span className="text-text-primary font-medium">{template.name}</span>
                       </div>
                     </button>
@@ -196,13 +244,13 @@ function NewProject() {
 
           {/* Tone Selection */}
           {selectedTemplate && (
-            <div className="epic-card animate-reveal">
+            <div className="epic-card">
               <div className="flex items-center gap-3 mb-6">
                 <MessageSquare className="epic-icon h-6 w-6" />
-                <h2 className="text-2xl font-semibold">Infuse Your Voice with Power</h2>
+                <h2 className="text-2xl font-semibold">Choose Your Voice</h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {tones.map((tone) => (
                   <EpicTooltip
                     key={tone.id}
@@ -217,9 +265,14 @@ function NewProject() {
                           : 'border-accent-purple/20 hover:border-accent-purple/40'
                       }`}
                     >
-                      <span className={`font-medium ${
-                        selectedTones.includes(tone.id) ? 'text-accent-purple' : 'text-text-secondary'
-                      }`}>{tone.name}</span>
+                      <div className="flex items-center gap-3">
+                        {React.createElement(tone.icon, {
+                          className: `h-6 w-6 ${
+                            selectedTones.includes(tone.id) ? 'text-accent-purple animate-bounce-gentle' : 'text-text-secondary'
+                          }`
+                        })}
+                        <span className="text-text-primary font-medium">{tone.name}</span>
+                      </div>
                     </button>
                   </EpicTooltip>
                 ))}
@@ -229,53 +282,47 @@ function NewProject() {
 
           {/* Notes Input */}
           {selectedTones.length > 0 && (
-            <div className="epic-card animate-reveal">
+            <div className="epic-card">
               <div className="flex items-center gap-3 mb-6">
-                <Wand2 className="epic-icon h-6 w-6" />
-                <h2 className="text-2xl font-semibold">Transform Your Notes</h2>
+                <FileEdit className="epic-icon h-6 w-6" />
+                <h2 className="text-2xl font-semibold">Your Notes</h2>
               </div>
 
-              <EpicTooltip content="Paste your raw notes here and watch them transform into polished brilliance!">
+              <EpicTooltip content="Paste your notes here and watch them transform into something amazing!">
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Paste your messy notes here and watch the magic happen..."
-                  className="epic-input h-48 resize-none"
+                  className="epic-input min-h-[200px]"
+                  placeholder="Paste your notes here..."
                 />
               </EpicTooltip>
-
-              <div className="mt-2 text-text-secondary text-sm">
-                {notes.length} characters
-              </div>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-500 flex items-center gap-2 animate-reveal">
-              <AlertCircle className="h-5 w-5" />
-              {error}
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <p className="text-red-500">{error}</p>
             </div>
           )}
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isLoading || !projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0}
-              className="epic-button"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Crafting Your Masterpiece...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-5 w-5" />
-                  Transform Your Notes
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading || !projectName || !selectedIndustry || !selectedTemplate || selectedTones.length === 0}
+            className="epic-button w-full"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Transforming...</span>
+              </>
+            ) : (
+              <>
+                <Wand2 className="h-5 w-5" />
+                <span>Transform Notes</span>
+              </>
+            )}
+          </button>
         </form>
       </div>
     </div>

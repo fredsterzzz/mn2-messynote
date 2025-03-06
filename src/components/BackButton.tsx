@@ -7,7 +7,7 @@ interface BackButtonProps {
   label?: string;
 }
 
-function BackButton({ to, label = 'Back' }: BackButtonProps) {
+function BackButton({ to, label = 'Back to Dashboard' }: BackButtonProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -21,10 +21,10 @@ function BackButton({ to, label = 'Back' }: BackButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className="flex items-center text-text-secondary hover:text-accent-purple transition-colors mb-6"
+      className="group flex items-center gap-2 px-4 py-2 rounded-lg text-text-secondary hover:text-accent-purple transition-all duration-300 mb-6"
     >
-      <ArrowLeft className="h-5 w-5 mr-2" />
-      {label}
+      <ArrowLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1" />
+      <span>{label}</span>
     </button>
   );
 }

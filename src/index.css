@@ -163,6 +163,16 @@ body {
 }
 
 @layer base {
+  @font-face {
+    font-family: 'Handwriting';
+    src: url('/fonts/Caveat-Regular.ttf') format('truetype');
+  }
+
+  @font-face {
+    font-family: 'Display';
+    src: url('/fonts/CalSans-SemiBold.ttf') format('truetype');
+  }
+
   body {
     @apply bg-background text-text-primary antialiased;
     background-image: 
@@ -176,13 +186,14 @@ body {
     @apply w-full bg-background border border-accent-purple/20 rounded-lg p-4 
            text-text-primary placeholder-text-secondary/50 
            focus:outline-none focus:border-accent-purple focus:shadow-glow-sm
-           transition-all duration-300 hover:border-accent-purple/40;
+           transition-all duration-300;
   }
 
   .epic-card {
     @apply bg-background-secondary rounded-xl border border-accent-purple/20 p-8 
            hover:shadow-glow-sm hover:border-accent-purple/40
-           transition-all duration-300;
+           transition-all duration-300
+           animate-slide-up;
   }
 
   .epic-button {
@@ -199,17 +210,17 @@ body {
     @apply text-accent-purple animate-bounce-gentle;
   }
 
+  .epic-tooltip {
+    @apply absolute z-50 p-2 min-w-[200px] bg-background-secondary 
+           rounded-lg border border-accent-purple/20 shadow-glow-sm 
+           text-sm text-text-secondary;
+  }
+
   .epic-select {
     @apply w-full bg-background border border-accent-purple/20 rounded-lg p-4
            text-text-primary 
            focus:outline-none focus:border-accent-purple focus:shadow-glow-sm
            transition-all duration-300;
-  }
-
-  .epic-tooltip {
-    @apply absolute z-10 p-4 bg-background-secondary rounded-lg border border-accent-purple/20
-           shadow-glow-sm text-sm text-text-secondary
-           transition-all duration-300 transform;
   }
 
   .epic-progress {

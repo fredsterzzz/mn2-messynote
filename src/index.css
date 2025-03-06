@@ -166,11 +166,15 @@ body {
   @font-face {
     font-family: 'Handwriting';
     src: url('/fonts/Caveat-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
   }
 
   @font-face {
     font-family: 'Display';
-    src: url('/fonts/CalSans-SemiBold.ttf') format('truetype');
+    src: url('/fonts/Outfit-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
   }
 
   body {
@@ -197,13 +201,8 @@ body {
   }
 
   .epic-button {
-    @apply bg-gradient-cta text-white font-medium px-6 py-3 rounded-lg
-           flex items-center gap-2 hover:opacity-90 
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all duration-300
-           shadow-glow-md
-           hover:shadow-glow-lg hover:scale-105
-           active:scale-95;
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-purple to-accent-orange 
+           text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-glow-sm;
   }
 
   .epic-icon {
@@ -321,5 +320,98 @@ body {
 
   .button-press:active {
     transform: scale(0.95);
+  }
+
+  /* Epic Animations */
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounce-gentle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @keyframes scale {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  /* Utility Classes */
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s ease-in-out infinite;
+  }
+
+  .animate-scale {
+    animation: scale 2s ease-in-out infinite;
+  }
+
+  /* Epic Backgrounds */
+  .bg-gradient-cosmic {
+    @apply bg-gradient-to-b from-background via-background to-background-secondary;
+    background-image: radial-gradient(circle at top right, rgba(147, 51, 234, 0.1), transparent 70%),
+                      radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.1), transparent 70%);
+  }
+
+  .bg-gradient-card {
+    @apply bg-gradient-to-br from-accent-purple/10 to-accent-orange/10;
+  }
+
+  .bg-gradient-cta {
+    @apply bg-gradient-to-r from-accent-orange via-accent-purple to-accent-orange bg-size-200 hover:bg-pos-100;
+  }
+
+  /* Epic Effects */
+  .shadow-glow-sm {
+    box-shadow: 0 0 15px -3px rgba(147, 51, 234, 0.2);
+  }
+
+  .shadow-glow-md {
+    box-shadow: 0 0 25px -5px rgba(147, 51, 234, 0.3);
+  }
+
+  .shadow-glow-lg {
+    box-shadow: 0 0 35px -7px rgba(147, 51, 234, 0.4);
+  }
+
+  /* Epic Typography */
+  .font-handwriting {
+    font-family: 'Handwriting', cursive;
+  }
+
+  .font-display {
+    font-family: 'Display', sans-serif;
+  }
+
+  /* Epic Utilities */
+  .bg-size-200 {
+    background-size: 200% 100%;
+  }
+
+  .bg-pos-0 {
+    background-position: 0% 0%;
+  }
+
+  .bg-pos-100 {
+    background-position: 100% 0%;
   }
 }

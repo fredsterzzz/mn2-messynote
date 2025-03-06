@@ -40,25 +40,25 @@ const features = [
     icon: Brain,
     title: "AI-Powered Magic",
     description: "Smart AI that understands your notes and crafts perfect content.",
-    animation: "animate-pulse"
+    animation: "animate-pulse-gentle"
   },
   {
     icon: Zap,
     title: "Lightning Fast",
     description: "Polished content in seconds—faster than you can say 'organized'!",
-    animation: "animate-bounce-gentle"
+    animation: "animate-float"
   },
   {
     icon: FileText,
     title: "Multiple Formats",
     description: "From essays to presentations—your notes, your way.",
-    animation: "animate-scale"
+    animation: "animate-scale-in"
   },
   {
     icon: MessageSquare,
     title: "Custom Tones",
     description: "Professional, Creative, or Casual—express your unique voice!",
-    animation: "animate-pulse"
+    animation: "animate-pulse-gentle"
   }
 ];
 
@@ -85,14 +85,14 @@ export default function Landing() {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-slide-up">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
             <span className="font-handwriting text-accent-orange">Turn Chaos</span>
             {" into "}
-            <span className="bg-gradient-to-r from-accent-purple to-accent-orange bg-clip-text text-transparent">
+            <span className="text-gradient">
               Brilliance
             </span>
             {" with "}
-            <span className="font-display">MessyNotes.ai!</span>
+            <span className="font-montserrat">MessyNotes.ai!</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-text-secondary mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
@@ -100,181 +100,230 @@ export default function Landing() {
             professional content in seconds, so you can shine in school, work, or life!
           </p>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <Link to="/new" className="epic-button group">
-              <span>Transform Your Notes Now!</span>
-              <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <Link 
+              to="/new-project" 
+              className="epic-button-primary group"
+            >
+              Start Your Journey Now!
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <span className="block text-sm opacity-80">Free demo—no sign-up required!</span>
             </Link>
-            <Link to="/pricing" className="text-accent-purple hover:text-accent-orange underline transition-colors">
+            <a 
+              href="#pricing" 
+              className="epic-button-secondary"
+            >
               View Pricing
-            </Link>
+            </a>
           </div>
 
-          <div className="relative w-full max-w-3xl mx-auto rounded-xl overflow-hidden shadow-glow-lg animate-slide-up" style={{ animationDelay: '0.6s' }}>
-            <div className="aspect-video bg-background-secondary border border-accent-purple/20 rounded-xl p-8">
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-text-secondary mb-4">Paste a sample note here to see the magic!</p>
-                  <textarea 
-                    className="w-full max-w-lg bg-background border border-accent-purple/20 rounded-lg p-4 
-                             text-text-primary placeholder-text-secondary/50 resize-none
-                             focus:outline-none focus:border-accent-purple focus:shadow-glow-sm"
-                    placeholder="e.g., Meeting notes, ideas, or any messy text..."
-                    rows={3}
-                  />
-                  <button className="epic-button mt-4">
-                    <Sparkles className="h-5 w-5" />
-                    <span>Preview Transformation</span>
-                  </button>
-                </div>
-              </div>
+          {/* Interactive Demo */}
+          <div className="mt-12 max-w-3xl mx-auto animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            <div className="epic-card">
+              <textarea 
+                className="epic-textarea mb-4"
+                placeholder="e.g., Meeting notes, ideas, or messy text…"
+                rows={4}
+              />
+              <button className="epic-button-primary w-full">
+                <Sparkles className="w-5 h-5" />
+                Preview Transformation
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-          Powerful Features
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div 
-              key={feature.title}
-              className="epic-card group"
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              <div className={`p-4 rounded-full bg-gradient-card inline-block mb-4 ${feature.animation}`}>
-                <feature.icon className="h-8 w-8 text-accent-purple" />
+      <section className="section-spacing bg-gradient-cosmic">
+        <div className="cosmic-container">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 animate-fade-in">
+            <span className="text-gradient">Powerful Features</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <div 
+                key={feature.title}
+                className={`epic-card ${feature.animation}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <feature.icon className="w-10 h-10 text-accent-purple mb-4" />
+                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <p className="text-text-secondary">{feature.description}</p>
               </div>
-              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-              <p className="text-text-secondary">{feature.description}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Pricing Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-5xl mx-auto">
+      <section id="pricing" className="section-spacing">
+        <div className="cosmic-container">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Choose Your Plan
+            <span className="text-gradient">Choose Your Plan</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
-            <div className="epic-card">
-              <h3 className="text-2xl font-bold mb-4">Get Started for Free</h3>
-              <p className="text-text-secondary mb-6">Perfect for trying out MessyNotes.ai</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>3 transformations/month</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>Basic templates</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>Standard support</span>
-                </li>
-              </ul>
-              <Link to="/signup" className="epic-button w-full justify-center">
+            <div className="epic-card relative">
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold mb-2">Get Started Free</h3>
+                <p className="text-text-secondary">Perfect for trying out MessyNotes.ai</p>
+              </div>
+              <div className="mb-8">
+                <div className="flex items-baseline mb-4">
+                  <span className="text-4xl font-bold">$0</span>
+                  <span className="text-text-secondary ml-2">/month</span>
+                </div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-purple" />
+                    <span>3 transformations/month</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-purple" />
+                    <span>Basic templates</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-purple" />
+                    <span>Standard support</span>
+                  </li>
+                </ul>
+              </div>
+              <Link to="/new-project" className="epic-button-secondary w-full justify-center">
                 Start Free
               </Link>
             </div>
 
             {/* Premium Plan */}
-            <div className="epic-card relative border-accent-purple/40 shadow-glow-md">
-              <div className="absolute -top-3 right-4 bg-accent-orange text-white text-sm px-3 py-1 rounded-full">
-                Best Value
+            <div className="epic-card relative">
+              <div className="absolute -top-4 right-4">
+                <span className="px-3 py-1 bg-accent-orange text-white text-sm font-medium rounded-full">
+                  Best Value
+                </span>
               </div>
-              <h3 className="text-2xl font-bold mb-4">Premium</h3>
-              <p className="text-text-secondary mb-6">For power users who want it all</p>
-              <div className="text-3xl font-bold mb-6">
-                £9.99
-                <span className="text-text-secondary text-base font-normal">/month</span>
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold mb-2">Premium</h3>
+                <p className="text-text-secondary">For power users who need more</p>
               </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>Unlimited transformations</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>All templates & tones</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-accent-purple" />
-                  <span>Custom templates</span>
-                </li>
-              </ul>
-              <Link to="/signup" className="epic-button w-full justify-center bg-gradient-cta">
-                Start Your Free 14-Day Trial Now!
-              </Link>
-              <p className="text-center text-text-secondary text-sm mt-4">
-                No credit card needed—cancel anytime
-              </p>
+              <div className="mb-8">
+                <div className="flex items-baseline mb-4">
+                  <span className="text-4xl font-bold">£9.99</span>
+                  <span className="text-text-secondary ml-2">/month</span>
+                </div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-orange" />
+                    <span>Unlimited transformations</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-orange" />
+                    <span>All templates & custom options</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-orange" />
+                    <span>Priority support</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent-orange" />
+                    <span>Custom templates</span>
+                  </li>
+                </ul>
+              </div>
+              <button 
+                onClick={() => setShowLeadCapture(true)}
+                className="epic-button-primary w-full justify-center"
+              >
+                Start Free 14-Day Trial
+                <span className="block text-sm opacity-80">No credit card—cancel anytime</span>
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Testimonials Section */}
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-          What Users Are Saying
-        </h2>
-        <div className="max-w-3xl mx-auto">
-          <div className="epic-card">
-            <div className="flex items-start gap-4">
-              <div className="text-4xl">{testimonials[currentTestimonial].avatar}</div>
-              <div>
-                <p className="text-lg mb-4">{testimonials[currentTestimonial].text}</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {Array.from({ length: testimonials[currentTestimonial].rating }).map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-accent-orange fill-current" />
-                    ))}
+      <section className="section-spacing">
+        <div className="cosmic-container">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            <span className="text-gradient">What Our Users Say</span>
+          </h2>
+          <div className="flex overflow-hidden relative">
+            <div 
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentTestimonial * 100}%)` }}
+            >
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={index}
+                  className="epic-card w-full flex-shrink-0 mx-4"
+                >
+                  <div className="flex items-start mb-4">
+                    <span className="text-4xl mr-4">{testimonial.avatar}</span>
+                    <div>
+                      <div className="flex gap-1 mb-2">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-5 h-5 text-accent-orange fill-accent-orange" />
+                        ))}
+                      </div>
+                      <p className="text-lg mb-4">{testimonial.text}</p>
+                      <p className="text-text-secondary">
+                        {testimonial.author} • <span>{testimonial.role}</span>
+                      </p>
+                    </div>
                   </div>
-                  <p className="font-medium">
-                    {testimonials[currentTestimonial].author}
-                  </p>
-                  <span className="text-text-secondary">
-                    • {testimonials[currentTestimonial].role}
-                  </span>
                 </div>
-              </div>
+              ))}
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 mt-4">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                    index === currentTestimonial 
+                      ? 'bg-accent-purple' 
+                      : 'bg-accent-purple/20'
+                  }`}
+                  onClick={() => setCurrentTestimonial(index)}
+                />
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Lead Capture Modal */}
       {showLeadCapture && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-          <div className="epic-card max-w-lg w-full mx-4">
-            <h3 className="text-2xl font-bold mb-4">Get 3 Free Transformations Today!</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="epic-card max-w-md mx-4 animate-scale-in">
+            <button 
+              onClick={() => setShowLeadCapture(false)}
+              className="absolute top-4 right-4 text-text-secondary hover:text-text-primary"
+            >
+              ✕
+            </button>
+            <h3 className="text-2xl font-bold mb-4">Claim 3 Free Transformations!</h3>
             <p className="text-text-secondary mb-6">
-              Join our community and get productivity tips!
+              Join thousands of users who are already turning chaos into brilliance!
             </p>
-            <form onSubmit={handleEmailSubmit}>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="epic-input mb-4"
-              />
-              <button type="submit" className="epic-button w-full justify-center">
-                <Sparkles className="h-5 w-5" />
-                <span>Claim Now!</span>
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="epic-label">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="epic-input"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+              <button type="submit" className="epic-button-primary w-full">
+                Get Started!
               </button>
+              <p className="text-sm text-text-secondary text-center">
+                No credit card required. Unsubscribe anytime.
+              </p>
             </form>
           </div>
         </div>

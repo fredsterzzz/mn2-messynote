@@ -1,192 +1,185 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-background: #0a0118;
-  --color-background-secondary: #150b2e;
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a3a3ff;
-  --color-accent-purple: #8b5cf6;
-  --color-accent-orange: #f97316;
-  --color-accent-green: #22c55e;
-}
-
 @layer base {
+  @font-face {
+    font-family: 'Montserrat';
+    src: url('/fonts/Montserrat-Variable.ttf') format('truetype-variations');
+    font-weight: 100 900;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Open Sans';
+    src: url('/fonts/OpenSans-Variable.ttf') format('truetype-variations');
+    font-weight: 300 800;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Caveat';
+    src: url('/fonts/Caveat-Variable.ttf') format('truetype-variations');
+    font-weight: 400 700;
+    font-display: swap;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-text-primary font-sans;
+    @apply bg-gradient-to-br from-deep-purple via-background to-deep-black text-text-primary 
+           font-opensans antialiased min-h-screen overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-montserrat font-bold tracking-tight;
   }
 }
 
 @layer components {
-  .cosmic-gradient {
-    @apply bg-gradient-to-br from-background via-background-secondary to-background;
+  .cosmic-container {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
   }
 
-  .cosmic-video-bg {
-    background: linear-gradient(45deg, 
-      rgba(139, 92, 246, 0.1) 0%,
-      rgba(249, 115, 22, 0.1) 100%
-    );
-    animation: pulse 4s ease-in-out infinite;
+  .section-spacing {
+    @apply py-16 sm:py-24;
+  }
+
+  .cosmic-gradient {
+    @apply bg-gradient-to-br from-deep-purple via-background to-deep-black;
   }
 
   .epic-card {
-    @apply p-6 rounded-lg border border-accent-purple/20 bg-background/50 backdrop-blur-sm;
+    @apply p-6 sm:p-8 rounded-2xl border border-accent-purple/20 
+           bg-card/80 backdrop-blur-sm transition-all duration-300
+           hover:border-accent-purple/30 hover:shadow-glow-sm;
   }
 
   .epic-button {
-    @apply px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 
-           transition-all duration-300 hover:shadow-glow-sm disabled:opacity-50 
-           disabled:cursor-not-allowed;
+    @apply px-6 py-3 rounded-xl font-medium inline-flex items-center justify-center gap-2 
+           transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+           focus:outline-none focus:ring-2 focus:ring-accent-purple/50;
+  }
+
+  .epic-button-primary {
+    @apply epic-button bg-gradient-cta text-white shadow-glow-sm 
+           hover:shadow-glow-md hover:brightness-110;
   }
 
   .epic-button-secondary {
-    @apply epic-button bg-background-secondary hover:bg-background-secondary/80;
+    @apply epic-button bg-card border border-accent-purple/20 text-text-primary
+           hover:border-accent-purple/40 hover:bg-card/80;
   }
 
   .epic-input {
-    @apply w-full px-4 py-3 bg-background-secondary rounded-lg border border-accent-purple/20 
-           focus:border-accent-purple focus:ring-1 focus:ring-accent-purple outline-none
-           placeholder:text-text-secondary/50;
+    @apply w-full px-4 py-3 rounded-xl bg-card border border-accent-purple/20 
+           text-text-primary placeholder-text-secondary/50 transition-all duration-300
+           focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/20 
+           focus:outline-none hover:border-accent-purple/30;
   }
 
-  .epic-icon {
-    @apply text-accent-purple;
+  .epic-textarea {
+    @apply epic-input resize-none min-h-[200px];
+  }
+
+  .epic-label {
+    @apply block text-sm font-medium text-text-secondary mb-2;
+  }
+
+  .epic-select {
+    @apply epic-input appearance-none bg-no-repeat bg-right pr-10;
+  }
+
+  .epic-radio-group {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .epic-radio {
+    @apply sr-only;
+  }
+
+  .epic-radio-label {
+    @apply epic-card cursor-pointer flex items-center gap-3 p-4
+           peer-checked:border-accent-purple peer-checked:shadow-glow-sm;
+  }
+
+  .epic-checkbox {
+    @apply h-5 w-5 rounded border-2 border-accent-purple/30 bg-card
+           text-accent-purple focus:ring-accent-purple/20 transition-all duration-300;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-accent-purple to-accent-orange bg-clip-text text-transparent;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-gentle {
+    animation: pulse-gentle 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes pulse-gentle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes slide-down {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scale-in {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
 
   .shadow-glow-sm {
     @apply shadow-[0_0_15px_rgba(147,51,234,0.1)];
   }
 
-  .shadow-glow {
+  .shadow-glow-md {
     @apply shadow-[0_0_30px_rgba(147,51,234,0.2)];
   }
 
-  .bg-gradient-card {
-    @apply bg-gradient-to-br from-accent-purple/10 to-accent-orange/10;
-  }
-
-  .bg-gradient-cta {
-    @apply bg-gradient-to-r from-accent-purple to-accent-orange text-white;
-  }
-}
-
-@layer utilities {
-  .animate-bounce-gentle {
-    animation: bounce-gentle 2s infinite;
-  }
-
-  .animate-scale {
-    animation: scale 2s infinite;
-  }
-
-  .font-display {
-    font-family: 'Outfit', sans-serif;
-  }
-
-  .font-handwriting {
-    font-family: 'Caveat', cursive;
-  }
-
-  .animate-pulse-gentle {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  .animate-bounce-gentle {
-    animation: bounce 2s ease-in-out infinite;
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  .animate-wave {
-    animation: wave 2s ease-in-out infinite;
-  }
-
-  .animate-scribble {
-    animation: scribble 0.5s ease-out;
-  }
-
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite;
-  }
-
-  @keyframes bounce-gentle {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-5px);
-    }
-  }
-
-  @keyframes scale {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes bounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0) rotate(0);
-    }
-    50% {
-      transform: translateY(-10px) rotate(2deg);
-    }
-  }
-
-  @keyframes wave {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
-
-  @keyframes scribble {
-    0% {
-      transform: scale(0.8) rotate(-5deg);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1) rotate(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes glow {
-    0%, 100% {
-      filter: brightness(1);
-    }
-    50% {
-      filter: brightness(1.2);
-    }
+  .shadow-glow-lg {
+    @apply shadow-[0_0_45px_rgba(147,51,234,0.3)];
   }
 }

@@ -23,7 +23,32 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-cta': 'linear-gradient(to right, #8B5CF6, #F97316)',
+        'gradient-cta': 'linear-gradient(45deg, #8B5CF6, #F97316)',
+        'gradient-cosmic': 'linear-gradient(135deg, #1a1040 0%, #0A0A0B 100%)',
+      },
+      animation: {
+        float: 'float 3s ease-in-out infinite',
+        pulse: 'pulse 2s ease-in-out infinite',
+        sparkle: 'sparkle 2s ease-in-out infinite',
+        reveal: 'reveal 0.6s ease-out forwards',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        pulse: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.05)' },
+        },
+        sparkle: {
+          '0%, 100%': { opacity: '0', transform: 'scale(0)' },
+          '50%': { opacity: '1', transform: 'scale(1)' },
+        },
+        reveal: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       typography: {
         DEFAULT: {
@@ -54,18 +79,14 @@ export default {
             code: {
               color: '#F97316',
             },
-            'code::before': {
-              content: '""',
-            },
-            'code::after': {
-              content: '""',
-            },
             pre: {
               backgroundColor: '#111113',
-              color: '#E2E8F0',
             },
           },
         },
+      },
+      backdropBlur: {
+        xs: '2px',
       },
     },
   },

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, ShoppingBag, FileEdit, PenTool, Presentation, BookOpen } from 'lucide-react';
+import { FileText, Wand2, Loader2, AlertCircle, Car, Home, Briefcase, ShoppingBag, FileEdit, PenTool, Presentation, BookOpen, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../hooks/useCredits';
 import { transformNotes, templates, tones } from '../services/openai';
@@ -88,6 +88,14 @@ function NewProject() {
   const [generatedContent, setGeneratedContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -151,202 +159,252 @@ function NewProject() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <BackButton />
-      
-      <div className="bg-background-secondary rounded-xl border border-accent-purple/20 p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <FileText className="h-8 w-8 text-accent-purple mr-3" />
-            <h1 className="text-2xl font-bold text-text-primary">New Project</h1>
+    <div className="min-h-screen cosmic-gradient">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton />
+        
+        {/* Welcome Banner */}
+        {showWelcome && (
+          <div className="mb-8 p-6 bg-background/80 backdrop-blur-lg rounded-xl border border-accent-purple/30 reveal-animation">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Sparkles className="h-8 w-8 text-accent-purple mr-3 sparkle-animation" />
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-accent-purple to-purple-400 bg-clip-text text-transparent">
+                  Welcome to MessyNotes.ai
+                </h1>
+              </div>
+              <p className="text-text-secondary">Your Gateway to Polished Brilliance!</p>
+            </div>
           </div>
-          {credits && (
-            <div className="text-text-secondary">
-              {credits.subscription_status === 'active' ? (
-                <span className="text-accent-purple">Premium Plan</span>
-              ) : (
-                <span>Credits remaining: {credits.credits_remaining}</span>
-              )}
+        )}
+        
+        <div className="bg-background/80 backdrop-blur-lg rounded-xl border border-accent-purple/30 p-8 epic-card">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center reveal-animation reveal-delay-1">
+              <FileText className="h-8 w-8 text-accent-purple mr-3 float-animation" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-accent-purple to-purple-400 bg-clip-text text-transparent">
+                Create Your Masterpiece
+              </h1>
             </div>
-          )}
-        </div>
-
-        {/* Mode Selection */}
-        <div className="flex space-x-4 mb-8">
-          <button
-            onClick={() => {
-              setMode('freeform');
-              setSelectedTemplate('');
-              setFormData({});
-              setGeneratedContent('');
-            }}
-            className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
-              mode === 'freeform'
-                ? 'border-accent-purple bg-background text-accent-purple'
-                : 'border-accent-purple/20 hover:border-accent-purple/40'
-            }`}
-          >
-            <PenTool className="h-6 w-6 mr-2" />
-            <span>Freeform Notes</span>
-          </button>
-          <button
-            onClick={() => {
-              setMode('task');
-              setNotes('');
-              setGeneratedContent('');
-            }}
-            className={`flex items-center p-4 rounded-lg border-2 transition-all hover:scale-105 ${
-              mode === 'task'
-                ? 'border-accent-purple bg-background text-accent-purple'
-                : 'border-accent-purple/20 hover:border-accent-purple/40'
-            }`}
-          >
-            <FileEdit className="h-6 w-6 mr-2" />
-            <span>Task Helper</span>
-          </button>
-        </div>
-
-        {mode === 'freeform' ? (
-          <>
-            {/* Grid of Content Types */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => setSelectedType(template.id)}
-                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                    selectedType === template.id
-                      ? 'border-accent-purple bg-background text-accent-purple'
-                      : 'border-accent-purple/20 hover:border-accent-purple/40'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    {template.icon === '💼' && <Briefcase className="h-6 w-6" />}
-                    {template.icon === '📝' && <FileText className="h-6 w-6" />}
-                    {template.icon === '📈' && <PenTool className="h-6 w-6" />}
-                    {template.icon === '🎓' && <BookOpen className="h-6 w-6" />}
-                    {template.icon === '🎨' && <Wand2 className="h-6 w-6" />}
-                    {template.icon === '⚙️' && <FileEdit className="h-6 w-6" />}
-                    {template.icon === '👥' && <FileText className="h-6 w-6" />}
-                    {template.icon === '🎯' && <Presentation className="h-6 w-6" />}
-                    <span className="mt-2">{template.name}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Tone Selection */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {tones.map((tone) => (
-                <button
-                  key={tone.id}
-                  onClick={() => setSelectedTone(tone.id)}
-                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                    selectedTone === tone.id
-                      ? 'border-accent-purple bg-background text-accent-purple'
-                      : 'border-accent-purple/20 hover:border-accent-purple/40'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xl mb-2">{tone.icon}</span>
-                    <span>{tone.name}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Notes Input */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Your Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Paste or type your notes here..."
-                rows={8}
-                className="w-full rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
-              />
-            </div>
-          </>
-        ) : (
-          <div>
-            {/* Template Selection */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {taskTemplates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => {
-                    setSelectedTemplate(template.id);
-                    setFormData({});
-                    setGeneratedContent('');
-                  }}
-                  className={`p-4 rounded-lg border-2 text-center transition-all hover:scale-105 ${
-                    selectedTemplate === template.id
-                      ? 'border-accent-purple bg-background text-accent-purple'
-                      : 'border-accent-purple/20 hover:border-accent-purple/40'
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    {template.icon}
-                    <span className="mt-2">{template.name}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {selectedTemplate && (
-              <div className="space-y-6">
-                {taskTemplates
-                  .find(t => t.id === selectedTemplate)
-                  ?.fields.map((field) => (
-                    <div key={field.name}>
-                      <label className="block text-sm font-medium text-text-secondary mb-2">
-                        {field.label}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData[field.name] || ''}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                        placeholder={field.placeholder}
-                        className="w-full rounded-lg bg-background border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20"
-                      />
-                    </div>
-                  ))}
+            {credits && (
+              <div className="text-text-secondary reveal-animation reveal-delay-2">
+                {credits.subscription_status === 'active' ? (
+                  <span className="text-accent-purple pulse-animation">✨ Premium Plan</span>
+                ) : (
+                  <span>Credits remaining: {credits.credits_remaining}</span>
+                )}
               </div>
             )}
           </div>
-        )}
 
-        {error && (
-          <div className="mt-6 p-4 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2" />
-            {error}
+          {/* Mode Selection */}
+          <div className="flex space-x-4 mb-8 reveal-animation reveal-delay-3">
+            <button
+              onClick={() => {
+                setMode('freeform');
+                setSelectedTemplate('');
+                setFormData({});
+                setGeneratedContent('');
+              }}
+              className={`flex-1 epic-button flex items-center justify-center p-6 rounded-xl transition-all ${
+                mode === 'freeform'
+                  ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                  : 'border-accent-purple/20 hover:border-accent-purple/40'
+              }`}
+            >
+              <div className="text-center">
+                <PenTool className="h-8 w-8 mx-auto mb-2 float-animation" />
+                <span className="block font-semibold">Freeform Notes</span>
+                <span className="text-sm text-text-secondary mt-1 block">Unleash your creativity!</span>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setMode('task');
+                setNotes('');
+                setGeneratedContent('');
+              }}
+              className={`flex-1 epic-button flex items-center justify-center p-6 rounded-xl transition-all ${
+                mode === 'task'
+                  ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                  : 'border-accent-purple/20 hover:border-accent-purple/40'
+              }`}
+            >
+              <div className="text-center">
+                <FileEdit className="h-8 w-8 mx-auto mb-2 float-animation" />
+                <span className="block font-semibold">Task Helper</span>
+                <span className="text-sm text-text-secondary mt-1 block">Guided excellence!</span>
+              </div>
+            </button>
           </div>
-        )}
 
-        <button
-          onClick={generateContent}
-          disabled={isLoading}
-          className="w-full mt-6 flex items-center justify-center px-8 py-4 bg-gradient-cta text-white rounded-lg font-semibold hover:opacity-90 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-        >
-          {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+          {mode === 'freeform' ? (
+            <>
+              {/* Content Types */}
+              <div className="mb-8 reveal-animation reveal-delay-4">
+                <h2 className="text-lg font-semibold mb-4 text-text-primary">Choose Your Quest</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {templates.map((template, index) => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedType(template.id)}
+                      className={`epic-card p-6 rounded-xl border-2 text-center transition-all ${
+                        selectedType === template.id
+                          ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                          : 'border-accent-purple/20 hover:border-accent-purple/40'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="h-12 w-12 mb-3 float-animation">
+                          {template.icon === '💼' && <Briefcase className="h-full w-full" />}
+                          {template.icon === '📝' && <FileText className="h-full w-full" />}
+                          {template.icon === '📈' && <PenTool className="h-full w-full" />}
+                          {template.icon === '🎓' && <BookOpen className="h-full w-full" />}
+                          {template.icon === '🎨' && <Wand2 className="h-full w-full" />}
+                          {template.icon === '⚙️' && <FileEdit className="h-full w-full" />}
+                          {template.icon === '👥' && <FileText className="h-full w-full" />}
+                          {template.icon === '🎯' && <Presentation className="h-full w-full" />}
+                        </div>
+                        <span className="font-semibold">{template.name}</span>
+                        <span className="text-sm text-text-secondary mt-1">{template.description}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tone Selection */}
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold mb-4 text-text-primary">Set the Tone</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {tones.map((tone) => (
+                    <button
+                      key={tone.id}
+                      onClick={() => setSelectedTone(tone.id)}
+                      className={`epic-card p-6 rounded-xl border-2 text-center transition-all ${
+                        selectedTone === tone.id
+                          ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                          : 'border-accent-purple/20 hover:border-accent-purple/40'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span className="text-3xl mb-3 float-animation">{tone.icon}</span>
+                        <span className="font-semibold">{tone.name}</span>
+                        <span className="text-sm text-text-secondary mt-1">{tone.description}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes Input */}
+              <div className="mb-8">
+                <label className="block text-lg font-semibold text-text-primary mb-4">
+                  Your Notes
+                </label>
+                <div className="relative">
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Paste or type your notes here..."
+                    rows={8}
+                    className="w-full rounded-xl bg-background/50 backdrop-blur-sm border-2 border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20 p-4 transition-all"
+                  />
+                  <div className="absolute bottom-4 right-4 text-text-secondary text-sm">
+                    {notes.length} characters
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
-            <Wand2 className="h-5 w-5 mr-2" />
-          )}
-          {isLoading ? 'Generating...' : 'Generate Content'}
-        </button>
+            <div className="reveal-animation">
+              {/* Template Selection */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+                {taskTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => {
+                      setSelectedTemplate(template.id);
+                      setFormData({});
+                      setGeneratedContent('');
+                    }}
+                    className={`epic-card p-6 rounded-xl border-2 text-center transition-all ${
+                      selectedTemplate === template.id
+                        ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                        : 'border-accent-purple/20 hover:border-accent-purple/40'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="h-12 w-12 mb-3 float-animation">
+                        {template.icon}
+                      </div>
+                      <span className="font-semibold">{template.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
 
-        {/* Generated Content */}
-        {generatedContent && (
-          <div className="mt-8 p-6 bg-background rounded-lg border border-accent-purple/20">
-            <h2 className="text-lg font-semibold mb-4 text-accent-purple">Generated Content</h2>
-            <div className="prose prose-invert max-w-none whitespace-pre-wrap">
-              {generatedContent}
+              {selectedTemplate && (
+                <div className="space-y-6 reveal-animation">
+                  {taskTemplates
+                    .find(t => t.id === selectedTemplate)
+                    ?.fields.map((field) => (
+                      <div key={field.name}>
+                        <label className="block text-sm font-semibold text-text-primary mb-2">
+                          {field.label}
+                        </label>
+                        <input
+                          type="text"
+                          value={formData[field.name] || ''}
+                          onChange={(e) => handleInputChange(field.name, e.target.value)}
+                          placeholder={field.placeholder}
+                          className="w-full rounded-xl bg-background/50 backdrop-blur-sm border-2 border-accent-purple/20 text-text-primary placeholder-text-secondary focus:border-accent-purple focus:ring focus:ring-accent-purple/20 p-4 transition-all"
+                        />
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+
+          {error && (
+            <div className="mt-6 p-4 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20 flex items-center reveal-animation">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={generateContent}
+            disabled={isLoading}
+            className="epic-button w-full mt-8 flex items-center justify-center px-8 py-6 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-6 w-6 animate-spin mr-3" />
+                <span>Crafting Your Masterpiece...</span>
+              </>
+            ) : (
+              <>
+                <Wand2 className="h-6 w-6 mr-3" />
+                <span>Transform Your Notes</span>
+              </>
+            )}
+          </button>
+
+          {/* Generated Content */}
+          {generatedContent && (
+            <div className="mt-8 p-6 bg-background/50 backdrop-blur-sm rounded-xl border-2 border-accent-purple/30 reveal-animation">
+              <div className="flex items-center mb-4">
+                <Sparkles className="h-6 w-6 text-accent-purple mr-2 sparkle-animation" />
+                <h2 className="text-lg font-semibold text-accent-purple">Your Polished Masterpiece</h2>
+              </div>
+              <div className="prose prose-invert max-w-none whitespace-pre-wrap">
+                {generatedContent}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
